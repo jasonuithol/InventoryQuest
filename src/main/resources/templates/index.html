@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>⚔️ InventoryQuest</title>
+    <link rel="stylesheet" th:href="@{/css/game.css}">
+</head>
+<body>
+<div class="wrap" style="max-width:520px; margin-top:12vh; text-align:center;">
+    <h1 style="font-size:40px; margin-bottom:4px;">⚔️ InventoryQuest</h1>
+    <p class="muted">Climb the mountain. Manage your backpack. Become King of the Mountain. 🏔️</p>
+    <form method="post" th:action="@{/spawn}" style="margin-top:24px; display:flex; gap:8px; justify-content:center;">
+        <input type="text" name="name" placeholder="Your climber's name" maxlength="32"
+               style="padding:10px 14px; border-radius:8px; border:1px solid #4a4f59; background:#23262c; color:#e8e6e3; font-size:16px;">
+        <button class="primary" type="submit">Spawn on the slopes</button>
+    </form>
+    <p class="hint">256 players start on the base ring. Four squares merge into one each level up, to a single summit.</p>
+</div>
+</body>
+</html>

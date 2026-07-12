@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>⚔️ InventoryQuest</title>
+    <link rel="stylesheet" th:href="@{/css/game.css}">
+    <script th:src="@{/webjars/htmx.org/dist/htmx.min.js}"></script>
+    <script th:src="@{/webjars/htmx.org/dist/ext/ws.js}"></script>
+</head>
+<body>
+
+<!-- ═══ SCREEN (whole board; re-rendered by every htmx action) ═══════════════════════ -->
+<div th:fragment="screen" id="screen" hx-ext="ws"
+     th:attr="ws-connect=@{/ws(playerId=${s.player.id},level=${s.player.level},index=${s.player.squareIndex})}">
+  <div class="wrap">
+
+    <!-- Status strip: elevation, health, state badge — always agrees with the panel -->
+    <div class="strip">
+      <span>⛰️ Level <b th:text="${s.player.level}">0</b> · <span th:text="${s.squareCount}">256</span> squares</span>
+      <span class="hearts">
+        <span th:each="i : ${#numbers.sequence(1,4)}" th:text="${i <= s.player.health} ? '❤️' : '🖤'">❤️</span>
+      </span>
+      <span class="muted" th:if="${s.occupantCount > 1}" th:text="'👥 ' + ${s.occupantCount} + ' here'">👥</span>
+      <span class="badge" th:classappend="${s.state}" th:text="${s.state}">IDLE</span>
+    </div>
+
+    <div class="msg" th:text="${s.message}"></div>
+
+    <div class="board">
+      <!-- LEFT: the backpack + equipment are on screen at all times, interactive in every state -->
+      <div class="panel">
+        <h2>🎒 Backpack</h2>
+        <div id="craftform" class="backpack">
+          <div th:each="i : ${#numbers.sequence(1,30)}" class="slot-bg"></div>
+          <div th:each="item : ${s.player.backpack.items}" class="item"
+               th:classappend="${s.selected.contains(item.id)} ? 'selected'"
+               th:style="|grid-row:${item.row + 1} / span ${item.type.size}; grid-column:${item.col + 1} / span ${item.type.size};|">
+            <label class="emoji">
+              <input type="checkbox" name="sel" th:value="${item.id}"/>
+              <span th:text="${item.type.emoji}">❔</span>
+            </label>
+            <div class="acts">
+              <button th:if="${item.type.equippable}" title="equip"
+                      th:attr="hx-post=@{/game/{id}/equip/{iid}(id=${s.player.id},iid=${item.id})}"
+                      hx-target="#screen" hx-swap="outerHTML">⬆️</button>
+              <button title="drop"
+                      th:attr="hx-post=@{/game/{id}/drop/{iid}(id=${s.player.id},iid=${item.id})}"
+                      hx-target="#screen" hx-swap="outerHTML">⤵️</button>
+            </div>
+          </div>
+        </div>
+
+        <h2 style="margin-top:16px;">Equipment</h2>
+        <div class="equipment">
+          <div class="eqslot" th:each="slot : ${T(com.example.inventoryquest.item.EquipSlot).values()}">
+            <span th:with="worn=${s.player.equipment.get(slot)}">
+              <span th:if="${worn != null}" th:text="${worn.type.emoji}">🗡️</span>
+              <span th:unless="${worn != null}" class="muted" th:text="${slot.emoji}">🗡️</span>
+            </span>
+            <button th:if="${s.player.equipment.get(slot) != null}"
+                    th:attr="hx-post=@{/game/{id}/unequip/{slot}(id=${s.player.id},slot=${slot})}"
+                    hx-target="#screen" hx-swap="outerHTML">unequip</button>
+            <span class="label" th:text="${slot.name().toLowerCase()}">sword</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: state-specific context panel (nested fragment; also fetched alone on a WS nudge) -->
+      <div th:fragment="contextPanel" id="context-panel" class="panel">
+
+        <!-- IDLE / MUST_MOVE: movement + ground items -->
+        <div th:if="${s.state.name() == 'IDLE' or s.state.name() == 'MUST_MOVE'}">
+          <h2 th:text="${s.state.name() == 'MUST_MOVE'} ? 'You voted Leave — move' : 'Move'">Move</h2>
+          <div class="moves">
+            <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='LEFT')}"
+                    hx-target="#screen" hx-swap="outerHTML">⬅️ Left</button>
+            <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='UP')}"
+                    th:disabled="${!s.canClimb}" hx-target="#screen" hx-swap="outerHTML">⬆️ Up</button>
+            <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='RIGHT')}"
+                    hx-target="#screen" hx-swap="outerHTML">➡️ Right</button>
+          </div>
+
+          <div th:if="${s.state.name() == 'IDLE'}">
+            <h2 style="margin-top:16px;">Ground items</h2>
+            <p class="muted" th:if="${s.ground.isEmpty()}">Nothing here.</p>
+            <div class="ground">
+              <div class="g" th:each="g : ${s.ground}">
+                <span class="emoji" th:text="${g.emoji}">🧱</span>
+                <button th:disabled="${!g.fits}" th:title="${g.fits} ? 'pick up' : 'no room'"
+                        th:attr="hx-post=@{/game/{id}/pickup/{iid}(id=${s.player.id},iid=${g.id})}"
+                        hx-target="#screen" hx-swap="outerHTML"
+                        th:text="${g.fits} ? 'pick up' : 'no fit'">pick up</button>
+              </div>
+            </div>
+            <p class="hint">Items are picked up only if they fit — the backpack is the game.</p>
+          </div>
+        </div>
+
+        <!-- VOTING -->
+        <div th:if="${s.state.name() == 'VOTING'}">
+          <h2>Someone's here — vote</h2>
+          <p class="muted">With: <span th:text="${#strings.listJoin(s.others, ', ')}">…</span></p>
+          <div class="votes">
+            <button class="danger" th:disabled="${s.hasVoted}"
+                    th:attr="hx-post=@{/game/{id}/vote(id=${s.player.id},option='FIGHT')}"
+                    hx-target="#screen" hx-swap="outerHTML">⚔️ Fight</button>
+            <button th:disabled="${s.hasVoted}"
+                    th:attr="hx-post=@{/game/{id}/vote(id=${s.player.id},option='TRADE')}"
+                    hx-target="#screen" hx-swap="outerHTML">🤝 Trade</button>
+            <button th:disabled="${s.hasVoted}"
+                    th:attr="hx-post=@{/game/{id}/vote(id=${s.player.id},option='LEAVE')}"
+                    hx-target="#screen" hx-swap="outerHTML">🚶 Leave</button>
+          </div>
+          <p class="hint" th:if="${s.hasVoted}">Vote cast. Waiting for the others…</p>
+          <p class="hint">If anyone votes Fight, everyone fights.</p>
+        </div>
+
+        <!-- TRADING -->
+        <div th:if="${s.state.name() == 'TRADING'}">
+          <h2>🤝 Trade tables</h2>
+          <div class="tables">
+            <div class="table" th:each="t : ${s.tradeTables}">
+              <div><b>with <span th:text="${t.opponentName}">?</span></b>
+                <span class="muted" th:text="' · ' + ${t.state}"></span></div>
+              <div class="sides">
+                <div class="side"><h4>You offer</h4>
+                  <button th:each="o : ${t.mine}" th:if="${t.state == 'OPEN'}"
+                          th:attr="hx-post=@{/game/{id}/trade/{tid}/withdraw/{iid}(id=${s.player.id},tid=${t.tableId},iid=${o.itemId})}"
+                          hx-target="#screen" hx-swap="outerHTML" th:text="${o.emoji}">💎</button>
+                  <span th:each="o : ${t.mine}" th:unless="${t.state == 'OPEN'}" th:text="${o.emoji}">💎</span>
+                </div>
+                <div class="side"><h4>They offer</h4>
+                  <span th:each="o : ${t.theirs}" th:text="${o.emoji}">🧱</span>
+                </div>
+              </div>
+              <div th:if="${t.state == 'OPEN'}">
+                <span class="muted">offer:</span>
+                <button th:each="item : ${s.player.backpack.items}"
+                        th:attr="hx-post=@{/game/{id}/trade/{tid}/offer/{iid}(id=${s.player.id},tid=${t.tableId},iid=${item.id})}"
+                        hx-target="#screen" hx-swap="outerHTML" th:text="${item.type.emoji}">🧱</button>
+                <button class="primary" style="margin-top:6px;"
+                        th:attr="hx-post=@{/game/{id}/trade/{tid}/propose(id=${s.player.id},tid=${t.tableId})}"
+                        hx-target="#screen" hx-swap="outerHTML">Propose</button>
+              </div>
+              <div th:if="${t.iCanAccept}">
+                <button class="ok" th:attr="hx-post=@{/game/{id}/trade/{tid}/accept(id=${s.player.id},tid=${t.tableId})}"
+                        hx-target="#screen" hx-swap="outerHTML">Accept</button>
+                <button class="danger" th:attr="hx-post=@{/game/{id}/trade/{tid}/reject(id=${s.player.id},tid=${t.tableId})}"
+                        hx-target="#screen" hx-swap="outerHTML">Reject</button>
+              </div>
+              <span class="muted" th:if="${t.state == 'PROPOSED' and t.iProposed}">Proposed — waiting for them…</span>
+              <span class="ok" th:if="${t.state == 'ACCEPTED'}">Traded ✓</span>
+            </div>
+          </div>
+          <p class="hint">Every table is visible to every trader. An item can only be on one table at a time.</p>
+        </div>
+
+        <!-- FIGHTING -->
+        <div th:if="${s.state.name() == 'FIGHTING'}">
+          <h2>⚔️ Fighting</h2>
+          <p>Your health:
+            <span class="hearts" th:if="${s.fight != null}"
+                  th:text="${'❤️'.repeat(s.fight.myHealth)}">❤️</span></p>
+          <p class="muted" th:if="${s.fight != null}" th:text="${s.fight.combatants} + ' combatants remain'">…</p>
+          <button class="danger" th:attr="hx-post=@{/game/{id}/fight/step(id=${s.player.id})}"
+                  hx-target="#screen" hx-swap="outerHTML">Next round</button>
+          <p class="hint">Each round every combatant takes a hit. Last one standing wins the square.</p>
+        </div>
+
+        <!-- SUMMIT / ELIMINATED -->
+        <div th:if="${s.state.name() == 'SUMMIT'}">
+          <h2>👑 King of the Mountain</h2>
+          <p>You reached the summit. The title is yours — until someone thinks they deserve it more.</p>
+        </div>
+        <div th:if="${s.state.name() == 'ELIMINATED'}">
+          <h2>👻 Eliminated</h2>
+          <p class="muted">The mountain does not do refunds.</p>
+        </div>
+
+        <!-- Recipe panel: live filter over the current selection -->
+        <div th:fragment="recipePanel" id="recipe-panel" class="recipes"
+             th:attr="hx-get=@{/game/{id}/recipes(id=${s.player.id})}"
+             hx-trigger="change from:#craftform" hx-include="#craftform"
+             hx-target="#recipe-panel" hx-swap="outerHTML">
+          <h2 style="margin-top:16px;">Recipes</h2>
+          <p class="muted" th:if="${s.recipes.isEmpty()}">Select ingredients in the backpack to see what they make.</p>
+          <div class="recipe" th:each="r : ${s.recipes}" th:classappend="${!r.craftable} ? 'dim'">
+            <span style="font-size:24px;" th:text="${r.resultEmoji}">⚔️</span>
+            <span class="arrow">⟵</span>
+            <span th:each="ing : ${r.ingredients}" class="ing" th:classappend="${!ing.satisfied} ? 'missing'">
+              <span th:text="${ing.emoji}">🧱</span><span class="muted" th:text="'×' + ${ing.need}">×3</span>
+            </span>
+            <button class="primary" style="margin-left:auto;" th:if="${r.craftable}"
+                    th:attr="hx-post=@{/game/{id}/craft/{res}(id=${s.player.id},res=${r.resultName})}"
+                    hx-target="#screen" hx-swap="outerHTML">Craft</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- WebSocket nudge target: replaced out-of-band, then re-fetches this client's panel -->
+  <div id="square-signal" style="display:none"></div>
+</div>
+
+</body>
+</html>

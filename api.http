@@ -1,0 +1,35 @@
+### InventoryQuest — HTTP requests (VS Code REST Client / IntelliJ .http)
+@host = http://localhost:8080
+
+### Actuator health
+GET {{host}}/actuator/health
+
+### Spawn a climber (302 → /game/{id}); copy the id from the Location header
+POST {{host}}/spawn
+Content-Type: application/x-www-form-urlencoded
+
+name=Ada
+
+### Set the player id you were redirected to
+@player = PUT-THE-UUID-HERE
+
+### The game screen (full page)
+GET {{host}}/game/{{player}}
+
+### Just this player's context panel (what the WebSocket nudge re-fetches)
+GET {{host}}/game/{{player}}/panel
+
+### Move around the ring
+POST {{host}}/game/{{player}}/move
+Content-Type: application/x-www-form-urlencoded
+
+direction=RIGHT
+
+### Dev: drop bots into the player's square so a vote can happen (dev profile only)
+GET {{host}}/dev/bots?count=1&near={{player}}&vote=TRADE
+
+### Cast a vote
+POST {{host}}/game/{{player}}/vote
+Content-Type: application/x-www-form-urlencoded
+
+option=TRADE

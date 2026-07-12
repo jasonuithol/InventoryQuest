@@ -1,0 +1,16 @@
+# Local dev database. With `spring-boot-docker-compose` on the classpath this file is
+# auto-started by `./mvnw spring-boot:run`; otherwise bring it up with `podman compose up -d`.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: inventoryquest
+      POSTGRES_USER: iq
+      POSTGRES_PASSWORD: iq
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iq -d inventoryquest"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

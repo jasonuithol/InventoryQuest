@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: inventoryquest
+  threads:
+    virtual:
+      enabled: true            # thread-per-connection that scales; plain blocking code, no async/await
+  jpa:
+    open-in-view: false        # explicit transaction boundaries; no lazy loading in the view layer
+    hibernate:
+      ddl-auto: validate       # Flyway owns the schema; Hibernate only validates it matches
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  datasource:
+    url: jdbc:postgresql://localhost:5432/inventoryquest
+    username: iq
+    password: iq
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.example.inventoryquest: DEBUG
