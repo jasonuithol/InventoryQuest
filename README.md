@@ -1,5 +1,7 @@
 # ⚔️ InventoryQuest
 
+[![CI](https://github.com/jasonuithol/InventoryQuest/actions/workflows/ci.yml/badge.svg)](https://github.com/jasonuithol/InventoryQuest/actions/workflows/ci.yml)
+
 A server-authoritative multiplayer climb-the-mountain game where the real game is
 **inventory management**. See [`DESIGN.md`](DESIGN.md) for the full design;
 this README is how to run and work on it.
