@@ -51,17 +51,20 @@ public class MountainService {
         }
     }
 
-    /** Give a square a small random pile of loot the first time anyone stands on it. */
+    /**
+     * Give a square a small random pile of loot the first time anyone stands on it — always
+     * including the gear needed to climb out of this level, so the ascent is always achievable
+     * (if you can find the backpack space for it).
+     */
     @Transactional
     public void seedIfEmpty(Position position) {
         if (!groundItems(position).isEmpty()) {
             return;
         }
-        int count = 2 + ThreadLocalRandom.current().nextInt(3); // 2..4 items
-        ItemType[] loot = new ItemType[count];
+        int count = 2 + ThreadLocalRandom.current().nextInt(3); // 2..4 random items
         for (int i = 0; i < count; i++) {
-            loot[i] = SPAWN_TABLE[ThreadLocalRandom.current().nextInt(SPAWN_TABLE.length)];
+            scatter(position, SPAWN_TABLE[ThreadLocalRandom.current().nextInt(SPAWN_TABLE.length)]);
         }
-        scatter(position, loot);
+        ClimbGear.requiredToLeave(position.level()).ifPresent(gear -> scatter(position, gear));
     }
 }

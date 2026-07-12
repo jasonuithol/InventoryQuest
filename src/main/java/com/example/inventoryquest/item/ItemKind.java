@@ -7,5 +7,7 @@ package com.example.inventoryquest.item;
 public enum ItemKind {
     ARTIFACT,
     INGREDIENT,
-    FOOD
+    FOOD,
+    /** Mountaineering gear required to climb to the next level (snow jacket, cleats, ...). */
+    GEAR
 }

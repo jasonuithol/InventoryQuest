@@ -11,6 +11,7 @@ import com.example.inventoryquest.inventory.InventoryService;
 import com.example.inventoryquest.inventory.PlacedItem;
 import com.example.inventoryquest.item.EquipSlot;
 import com.example.inventoryquest.item.ItemType;
+import com.example.inventoryquest.mountain.ClimbGear;
 import com.example.inventoryquest.mountain.Direction;
 import com.example.inventoryquest.mountain.MountainService;
 import com.example.inventoryquest.mountain.Position;
@@ -99,6 +100,14 @@ public class GameService {
         Position from = player.position();
         if (!RingMath.canMove(from, direction)) {
             throw new GameException("There is no way " + direction.name().toLowerCase() + " from here");
+        }
+        if (direction == Direction.UP) {
+            ClimbGear.requiredToLeave(from.level()).ifPresent(gear -> {
+                if (!carries(player, gear)) {
+                    throw new GameException("You need " + gear.emoji() + " " + gear.displayName()
+                            + " in your backpack to climb from here");
+                }
+            });
         }
         Position to = RingMath.move(from, direction);
         player.moveTo(to);
@@ -358,8 +367,12 @@ public class GameService {
         List<GameSnapshot.TradeTableView> tables = tradeTablesFor(player, state);
         GameSnapshot.FightView fight = fightViewFor(player, state);
 
+        Optional<ItemType> gear = ClimbGear.requiredToLeave(pos.level());
+        String climbGear = gear.map(g -> g.emoji() + " " + g.displayName()).orElse(null);
+        boolean readyToClimb = gear.map(g -> carries(player, g)).orElse(true);
+
         return new GameSnapshot(player, Hearts.render(player.getHealth()), state, RingMath.squaresAt(pos.level()),
-                pos.level() < RingMath.SUMMIT_LEVEL, ground, others, roster.size(),
+                pos.level() < RingMath.SUMMIT_LEVEL, climbGear, readyToClimb, ground, others, roster.size(),
                 coordinator.hasVoted(pos.level(), pos.index(), playerId), recipes, selected,
                 tables, fight, message);
     }
@@ -465,5 +478,10 @@ public class GameService {
     private int attackDamage(Player player) {
         EquippedItem weapon = player.getEquipment().get(EquipSlot.SWORD);
         return weapon != null ? weapon.type().damage() : CombatService.UNARMED_DAMAGE;
+    }
+
+    /** Is the player carrying an item of this type in their backpack? */
+    private boolean carries(Player player, ItemType type) {
+        return player.getBackpack().items().stream().anyMatch(i -> i.type() == type);
     }
 }

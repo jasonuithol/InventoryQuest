@@ -88,7 +88,10 @@ database on `localhost:5432` — no extra configuration.
 ## What's implemented
 
 The full solo loop (spawn · move with ring wrap and `⌊i/4⌋` climb · pick-up with fit-check ·
-drop · equip/unequip · craft with post-consumption fit-check) is drivable end-to-end in the UI.
+drop · equip/unequip · craft with post-consumption fit-check · eat food to heal) is drivable
+end-to-end in the UI. Each ascent is gated on carrying that level's mountaineering gear —
+🧥 snow jacket → 🥾 cleats → ⛏️ ice pick → 🫁 oxygen tank — which the mountain seeds at each
+level, so the climb competes with loot for scarce backpack space.
 The multiplayer coordination — vote rounds with three-way routing (a single Fight vote resolves
 the round immediately and drags everyone in), complete-graph trading with the single-table
 invariant, and combat rounds where each weapon deals its own damage in hit-points and can miss —

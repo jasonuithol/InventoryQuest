@@ -19,6 +19,12 @@ public enum ItemType {
     BREAD("🍞", 1, ItemKind.FOOD, null, 0, 6),
     MEAT("🍖", 2, ItemKind.FOOD, null, 0, 10),
 
+    // ── Climbing gear (must be carried to ascend to the next level) ────────────────
+    SNOW_JACKET("🧥", 2, ItemKind.GEAR, null, 0, 0),
+    CLEATS("🥾", 1, ItemKind.GEAR, null, 0, 0),
+    ICE_PICK("⛏️", 2, ItemKind.GEAR, null, 0, 0),
+    OXYGEN_TANK("🫁", 3, ItemKind.GEAR, null, 0, 0),
+
     // ── Artifacts (equippable). Weapons carry attack damage in hit-points ──────────
     DAGGER("🗡️", 1, ItemKind.ARTIFACT, EquipSlot.SWORD, 2, 0),   // 2 HP — half a heart
     SWORD("⚔️", 3, ItemKind.ARTIFACT, EquipSlot.SWORD, 5, 0),     // 5 HP — over a heart
@@ -76,5 +82,14 @@ public enum ItemType {
 
     public boolean isFood() {
         return kind == ItemKind.FOOD;
+    }
+
+    public boolean isGear() {
+        return kind == ItemKind.GEAR;
+    }
+
+    /** A human-friendly name, e.g. {@code SNOW_JACKET} → "snow jacket". */
+    public String displayName() {
+        return name().toLowerCase().replace('_', ' ');
     }
 }

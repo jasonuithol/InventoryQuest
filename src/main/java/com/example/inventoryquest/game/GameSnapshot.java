@@ -17,6 +17,8 @@ public record GameSnapshot(
         GameState state,
         int squareCount,
         boolean canClimb,
+        String climbGear,        // label of the gear needed to climb up, or null at the summit
+        boolean readyToClimb,    // true if the player carries that gear (or none is required)
         List<GroundView> ground,
         List<String> others,
         int occupantCount,
