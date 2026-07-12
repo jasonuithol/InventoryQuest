@@ -1,5 +1,6 @@
 package com.example.inventoryquest.game;
 
+import com.example.inventoryquest.combat.CombatService;
 import com.example.inventoryquest.combat.VoteOption;
 import com.example.inventoryquest.crafting.CraftingService;
 import com.example.inventoryquest.crafting.Recipe;
@@ -80,7 +81,8 @@ public class GameService {
         mountain.seedIfEmpty(bot.position());
         announceArrival(bot);
         if (vote != null) {
-            coordinator.castVote(level, index, bot.getId(), vote, healthByPlayer(bot.position()));
+            Position pos = bot.position();
+            coordinator.castVote(level, index, bot.getId(), vote, healthByPlayer(pos), attackDamageByPlayer(pos));
         }
         return bot;
     }
@@ -205,13 +207,29 @@ public class GameService {
         return chosen;
     }
 
+    /** Eat a food item to restore health (capped at full), consuming it from the backpack. */
+    @Transactional
+    public void eat(UUID playerId, UUID instanceId) {
+        Player player = players.require(playerId);
+        InventoryService.Removed removed = inventory.remove(player.getBackpack(), instanceId);
+        ItemType type = removed.item().type();
+        if (!type.isFood()) {
+            throw new com.example.inventoryquest.inventory.InventoryException(
+                    type.emoji() + " isn't something you can eat");
+        }
+        player.setBackpack(removed.backpack());
+        player.setHealth(Math.min(Player.MAX_HEALTH, player.getHealth() + type.heal()));
+        players.save(player);
+    }
+
     // ── Voting & combat ──────────────────────────────────────────────────────────────
 
     @Transactional
     public void castVote(UUID playerId, VoteOption option) {
         Player player = players.require(playerId);
-        coordinator.castVote(player.getLevel(), player.getSquareIndex(), playerId, option,
-                healthByPlayer(player.position()));
+        Position pos = player.position();
+        coordinator.castVote(pos.level(), pos.index(), playerId, option,
+                healthByPlayer(pos), attackDamageByPlayer(pos));
     }
 
     @Transactional
@@ -340,7 +358,7 @@ public class GameService {
         List<GameSnapshot.TradeTableView> tables = tradeTablesFor(player, state);
         GameSnapshot.FightView fight = fightViewFor(player, state);
 
-        return new GameSnapshot(player, state, RingMath.squaresAt(pos.level()),
+        return new GameSnapshot(player, Hearts.render(player.getHealth()), state, RingMath.squaresAt(pos.level()),
                 pos.level() < RingMath.SUMMIT_LEVEL, ground, others, roster.size(),
                 coordinator.hasVoted(pos.level(), pos.index(), playerId), recipes, selected,
                 tables, fight, message);
@@ -399,7 +417,8 @@ public class GameService {
         }
         Position pos = player.position();
         Map<UUID, Integer> fight = coordinator.fight(pos.level(), pos.index());
-        return new GameSnapshot.FightView(fight.getOrDefault(player.getId(), player.getHealth()), fight.size());
+        int myHp = fight.getOrDefault(player.getId(), player.getHealth());
+        return new GameSnapshot.FightView(Hearts.render(myHp), fight.size());
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -419,7 +438,7 @@ public class GameService {
     private void announceArrival(Player player) {
         Position pos = player.position();
         coordinator.onArrival(pos.level(), pos.index(), player.getId(),
-                rosterIds(pos, null), healthByPlayer(pos));
+                rosterIds(pos, null), healthByPlayer(pos), attackDamageByPlayer(pos));
     }
 
     /** Alive player ids in a square, optionally excluding one (e.g. a player who just left). */
@@ -434,5 +453,17 @@ public class GameService {
         Map<UUID, Integer> health = new LinkedHashMap<>();
         players.inSquare(pos.level(), pos.index()).forEach(p -> health.put(p.getId(), p.getHealth()));
         return health;
+    }
+
+    /** Each player's attack damage, from their equipped weapon (or bare hands). */
+    private Map<UUID, Integer> attackDamageByPlayer(Position pos) {
+        Map<UUID, Integer> damage = new LinkedHashMap<>();
+        players.inSquare(pos.level(), pos.index()).forEach(p -> damage.put(p.getId(), attackDamage(p)));
+        return damage;
+    }
+
+    private int attackDamage(Player player) {
+        EquippedItem weapon = player.getEquipment().get(EquipSlot.SWORD);
+        return weapon != null ? weapon.type().damage() : CombatService.UNARMED_DAMAGE;
     }
 }

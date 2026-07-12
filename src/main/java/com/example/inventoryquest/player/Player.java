@@ -38,7 +38,10 @@ public class Player {
 
     public static final int BACKPACK_ROWS = 5;
     public static final int BACKPACK_COLS = 6;
-    public static final int MAX_HEALTH = 4;
+    /** Health is tracked in hit-points; 4 HP make up one heart, for 4 hearts of health. */
+    public static final int HP_PER_HEART = 4;
+    public static final int MAX_HEARTS = 4;
+    public static final int MAX_HEALTH = MAX_HEARTS * HP_PER_HEART; // 16 HP
 
     @Id
     private UUID id;

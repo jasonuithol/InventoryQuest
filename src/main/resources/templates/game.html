@@ -18,9 +18,7 @@
     <!-- Status strip: elevation, health, state badge — always agrees with the panel -->
     <div class="strip">
       <span>⛰️ Level <b th:text="${s.player.level}">0</b> · <span th:text="${s.squareCount}">256</span> squares</span>
-      <span class="hearts">
-        <span th:each="i : ${#numbers.sequence(1,4)}" th:text="${i <= s.player.health} ? '❤️' : '🖤'">❤️</span>
-      </span>
+      <span class="hearts" th:text="${s.hearts}">❤️❤️❤️❤️</span>
       <span class="muted" th:if="${s.occupantCount > 1}" th:text="'👥 ' + ${s.occupantCount} + ' here'">👥</span>
       <span class="badge" th:classappend="${s.state}" th:text="${s.state}">IDLE</span>
     </div>
@@ -44,6 +42,9 @@
               <button th:if="${item.type.equippable}" title="equip"
                       th:attr="hx-post=@{/game/{id}/equip/{iid}(id=${s.player.id},iid=${item.id})}"
                       hx-target="#screen" hx-swap="outerHTML">⬆️</button>
+              <button th:if="${item.type.food}" title="eat"
+                      th:attr="hx-post=@{/game/{id}/eat/{iid}(id=${s.player.id},iid=${item.id})}"
+                      hx-target="#screen" hx-swap="outerHTML">🍽️</button>
               <button title="drop"
                       th:attr="hx-post=@{/game/{id}/drop/{iid}(id=${s.player.id},iid=${item.id})}"
                       hx-target="#screen" hx-swap="outerHTML">⤵️</button>
@@ -160,8 +161,7 @@
         <div th:if="${s.state.name() == 'FIGHTING'}">
           <h2>⚔️ Fighting</h2>
           <p>Your health:
-            <span class="hearts" th:if="${s.fight != null}"
-                  th:text="${'❤️'.repeat(s.fight.myHealth)}">❤️</span></p>
+            <span class="hearts" th:if="${s.fight != null}" th:text="${s.fight.hearts}">❤️</span></p>
           <p class="muted" th:if="${s.fight != null}" th:text="${s.fight.combatants} + ' combatants remain'">…</p>
           <button class="danger" th:attr="hx-post=@{/game/{id}/fight/step(id=${s.player.id})}"
                   hx-target="#screen" hx-swap="outerHTML">Next round</button>

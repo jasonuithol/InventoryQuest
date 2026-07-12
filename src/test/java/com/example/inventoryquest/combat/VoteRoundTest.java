@@ -27,6 +27,17 @@ class VoteRoundTest {
     }
 
     @Test
+    void aSingleFightVoteResolvesImmediatelyWithoutWaitingForTheRest() {
+        VoteRound round = new VoteRound(Set.of(a, b, c));
+        round.cast(a, VoteOption.FIGHT); // b and c have not voted yet
+        assertThat(round.isComplete()).isFalse();
+
+        VoteResolution res = round.resolve().orElseThrow(); // resolves anyway
+        assertThat(res.isFight()).isTrue();
+        assertThat(res.fighters()).containsExactlyInAnyOrder(a, b, c); // everyone present is dragged in
+    }
+
+    @Test
     void peaceRoutesTradersAndLeaversSeparately() {
         VoteRound round = new VoteRound(Set.of(a, b, c));
         round.cast(a, VoteOption.TRADE);

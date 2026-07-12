@@ -94,6 +94,11 @@ public class GameController {
         return act(id, model, () -> game.unequip(id, slot));
     }
 
+    @PostMapping("/game/{id}/eat/{instanceId}")
+    public String eat(@PathVariable UUID id, @PathVariable UUID instanceId, Model model) {
+        return act(id, model, () -> game.eat(id, instanceId));
+    }
+
     @PostMapping("/game/{id}/craft/{result}")
     public String craft(@PathVariable UUID id, @PathVariable ItemType result, Model model) {
         return act(id, model, () -> game.craft(id, result));

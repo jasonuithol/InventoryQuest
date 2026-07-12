@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 import java.time.Clock;
+import java.util.random.RandomGenerator;
 
 @SpringBootApplication
 public class InventoryquestApplication {
@@ -17,6 +18,12 @@ public class InventoryquestApplication {
 	@Bean
 	Clock clock() {
 		return Clock.systemUTC();
+	}
+
+	/** Randomness for combat (hit/miss, target selection); injected so tests can make it deterministic. */
+	@Bean
+	RandomGenerator randomGenerator() {
+		return new java.util.Random();
 	}
 
 }

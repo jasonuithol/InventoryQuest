@@ -89,7 +89,9 @@ database on `localhost:5432` — no extra configuration.
 
 The full solo loop (spawn · move with ring wrap and `⌊i/4⌋` climb · pick-up with fit-check ·
 drop · equip/unequip · craft with post-consumption fit-check) is drivable end-to-end in the UI.
-The multiplayer coordination — vote rounds with three-way routing, complete-graph trading with
-the single-table invariant, and combat rounds with elimination — is implemented as tested domain
-state machines, wired through an in-memory per-square coordinator with WebSocket nudges, and
-reachable in the UI via the dev bot spawner.
+The multiplayer coordination — vote rounds with three-way routing (a single Fight vote resolves
+the round immediately and drags everyone in), complete-graph trading with the single-table
+invariant, and combat rounds where each weapon deals its own damage in hit-points and can miss —
+is implemented as tested domain state machines, wired through an in-memory per-square coordinator
+with WebSocket nudges, and reachable in the UI via the dev bot spawner. Health is tracked in
+hit-points (4 HP = 1 heart); food items (🍎🍞🍖) are eaten to restore it.

@@ -31,14 +31,24 @@ public class SquareCoordinator {
         VoteRound vote;
         VoteResolution resolution;
         TradeSession trade;
-        Map<UUID, Integer> fight;                 // fighter -> remaining health
+        Map<UUID, Integer> fightHealth;           // fighter -> remaining hit-points
+        Map<UUID, Integer> fightDamage;           // fighter -> weapon attack damage
         final Set<UUID> mustMove = new LinkedHashSet<>();
+
+        boolean fighting() {
+            return fightHealth != null;
+        }
+
+        void endFight() {
+            fightHealth = null;
+            fightDamage = null;
+        }
 
         void clear() {
             vote = null;
             resolution = null;
             trade = null;
-            fight = null;
+            endFight();
             mustMove.clear();
         }
     }
@@ -58,7 +68,7 @@ public class SquareCoordinator {
 
     /** A player has entered the square. Applies the readme's arrival rules. */
     public void onArrival(int level, int index, UUID arriving, Set<UUID> rosterAfter,
-                          Map<UUID, Integer> healthByPlayer) {
+                          Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer) {
         Square sq = square(level, index);
         synchronized (sq) {
             if (sq.trade != null) {
@@ -68,9 +78,10 @@ public class SquareCoordinator {
                 sq.resolution = null;
                 sq.mustMove.clear();
             }
-            if (sq.fight != null) {
+            if (sq.fighting()) {
                 // arrival during a fight joins the ongoing fight
-                sq.fight.put(arriving, healthByPlayer.getOrDefault(arriving, 1));
+                sq.fightHealth.put(arriving, healthByPlayer.getOrDefault(arriving, 1));
+                sq.fightDamage.put(arriving, damageByPlayer.getOrDefault(arriving, CombatService.UNARMED_DAMAGE));
             } else if (rosterAfter.size() <= 1) {
                 sq.clear(); // back to solo
             } else if (sq.vote == null || sq.resolution != null) {
@@ -88,10 +99,11 @@ public class SquareCoordinator {
         Square sq = square(level, index);
         synchronized (sq) {
             sq.mustMove.remove(leaving);
-            if (sq.fight != null) {
-                sq.fight.remove(leaving);
-                if (combatService.isOver(sq.fight)) {
-                    sq.fight = null;
+            if (sq.fighting()) {
+                sq.fightHealth.remove(leaving);
+                sq.fightDamage.remove(leaving);
+                if (combatService.isOver(sq.fightHealth)) {
+                    sq.endFight();
                 }
             }
             if (rosterAfter.size() <= 1) {
@@ -103,7 +115,7 @@ public class SquareCoordinator {
 
     /** Cast a vote; if the round completes, route the square into fight / trade / must-move. */
     public Optional<VoteResolution> castVote(int level, int index, UUID player, VoteOption option,
-                                             Map<UUID, Integer> healthByPlayer) {
+                                             Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer) {
         Square sq = square(level, index);
         Optional<VoteResolution> resolved;
         synchronized (sq) {
@@ -112,18 +124,22 @@ public class SquareCoordinator {
             }
             sq.vote.cast(player, option);
             resolved = sq.vote.resolve();
-            resolved.ifPresent(res -> applyResolution(sq, res, healthByPlayer));
+            resolved.ifPresent(res -> applyResolution(sq, res, healthByPlayer, damageByPlayer));
         }
         broadcaster.broadcastSquare(level, index);
         return resolved;
     }
 
-    private void applyResolution(Square sq, VoteResolution res, Map<UUID, Integer> healthByPlayer) {
+    private void applyResolution(Square sq, VoteResolution res,
+                                 Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer) {
         sq.resolution = res;
         if (res.isFight()) {
-            Map<UUID, Integer> fight = new LinkedHashMap<>();
-            res.fighters().forEach(f -> fight.put(f, healthByPlayer.getOrDefault(f, 1)));
-            sq.fight = fight;
+            sq.fightHealth = new LinkedHashMap<>();
+            sq.fightDamage = new LinkedHashMap<>();
+            res.fighters().forEach(f -> {
+                sq.fightHealth.put(f, healthByPlayer.getOrDefault(f, 1));
+                sq.fightDamage.put(f, damageByPlayer.getOrDefault(f, CombatService.UNARMED_DAMAGE));
+            });
         } else {
             sq.mustMove.clear();
             sq.mustMove.addAll(res.mustMove());
@@ -135,7 +151,7 @@ public class SquareCoordinator {
     public GameState stateFor(int level, int index, UUID player, int rosterSize) {
         Square sq = square(level, index);
         synchronized (sq) {
-            if (sq.fight != null && sq.fight.containsKey(player)) {
+            if (sq.fighting() && sq.fightHealth.containsKey(player)) {
                 return GameState.FIGHTING;
             }
             if (sq.resolution != null && !sq.resolution.isFight()) {
@@ -166,7 +182,7 @@ public class SquareCoordinator {
     }
 
     public Map<UUID, Integer> fight(int level, int index) {
-        Map<UUID, Integer> fight = square(level, index).fight;
+        Map<UUID, Integer> fight = square(level, index).fightHealth;
         return fight == null ? Map.of() : Map.copyOf(fight);
     }
 
@@ -174,13 +190,14 @@ public class SquareCoordinator {
     public Set<UUID> stepFight(int level, int index) {
         Square sq = square(level, index);
         synchronized (sq) {
-            if (sq.fight == null) {
+            if (!sq.fighting()) {
                 return Set.of();
             }
-            CombatService.RoundResult result = combatService.round(sq.fight);
-            sq.fight = new LinkedHashMap<>(result.healthAfter());
-            if (combatService.isOver(sq.fight)) {
-                sq.fight = null;
+            CombatService.RoundResult result = combatService.round(sq.fightHealth, sq.fightDamage);
+            sq.fightHealth = new LinkedHashMap<>(result.healthAfter());
+            sq.fightDamage.keySet().retainAll(sq.fightHealth.keySet()); // drop eliminated fighters
+            if (combatService.isOver(sq.fightHealth)) {
+                sq.endFight();
                 sq.resolution = null;
                 sq.vote = null;
             }

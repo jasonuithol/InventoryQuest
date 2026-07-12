@@ -13,6 +13,7 @@ import java.util.UUID;
  */
 public record GameSnapshot(
         Player player,
+        String hearts,
         GameState state,
         int squareCount,
         boolean canClimb,
@@ -37,6 +38,6 @@ public record GameSnapshot(
     }
 
     /** The current player's combat status. */
-    public record FightView(int myHealth, int combatants) {
+    public record FightView(String hearts, int combatants) {
     }
 }

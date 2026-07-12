@@ -62,14 +62,18 @@ public class VoteRound {
         return !roster.isEmpty() && votes.keySet().containsAll(roster);
     }
 
-    /** Resolve the round, or empty if not everyone has voted yet. */
+    /**
+     * Resolve the round. A single {@code FIGHT} vote resolves <strong>immediately</strong> — the
+     * fight starts and drags in everyone present, without waiting for the rest to vote. A peaceful
+     * outcome (Trade/Leave routing) still waits until everybody has cast a vote.
+     */
     public Optional<VoteResolution> resolve() {
-        if (!isComplete()) {
-            return Optional.empty();
-        }
         boolean anyFight = votes.values().stream().anyMatch(v -> v == VoteOption.FIGHT);
         if (anyFight) {
             return Optional.of(VoteResolution.fight(roster()));
+        }
+        if (!isComplete()) {
+            return Optional.empty();
         }
         Set<UUID> traders = votersFor(VoteOption.TRADE);
         Set<UUID> mustMove = votersFor(VoteOption.LEAVE);

@@ -6,5 +6,6 @@ package com.example.inventoryquest.item;
  */
 public enum ItemKind {
     ARTIFACT,
-    INGREDIENT
+    INGREDIENT,
+    FOOD
 }
