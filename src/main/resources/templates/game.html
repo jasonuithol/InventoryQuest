@@ -107,6 +107,18 @@
             ✅ Geared up with <span th:text="${s.climbGear}">🧥 snow jacket</span> — you can climb.</p>
 
           <div th:if="${s.state.name() == 'IDLE'}">
+            <div th:if="${s.monster != null}" class="monster">
+              <h2 style="margin-top:16px;">👹 A monster roams here</h2>
+              <p><span class="memoji" th:text="${s.monster.emoji}">🧟</span>
+                <b th:text="${s.monster.name}">yeti</b>
+                <span class="muted" th:text="'· ' + ${s.monster.hp} + '/' + ${s.monster.maxHp} + ' HP'">· 6/6</span></p>
+              <button class="danger" th:attr="hx-post=@{/game/{id}/hunt(id=${s.player.id})}"
+                      hx-target="#screen" hx-swap="outerHTML">
+                🗡️ Hunt the <span th:text="${s.monster.name}">yeti</span></button>
+              <p class="hint">Slay it for its drop — the ingredient for this level's climbing gear.
+                It hits back, so bring a weapon (and a snack).</p>
+            </div>
+
             <h2 style="margin-top:16px;">Ground items</h2>
             <p class="muted" th:if="${s.ground.isEmpty()}">Nothing here.</p>
             <div class="ground">

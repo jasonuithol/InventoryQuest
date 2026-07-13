@@ -28,8 +28,13 @@ public record GameSnapshot(
         Set<UUID> selected,
         List<TradeTableView> tradeTables,
         FightView fight,
+        MonsterView monster,     // the monster roaming this square, or null
         String message
 ) {
+
+    /** A monster present in the current square, for the hunt UI. */
+    public record MonsterView(String emoji, String name, int hp, int maxHp) {
+    }
 
     /** One trade table from the current player's perspective. */
     public record TradeTableView(String tableId, String opponentName,

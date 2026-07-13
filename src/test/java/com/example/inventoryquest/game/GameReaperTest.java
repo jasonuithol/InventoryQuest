@@ -38,7 +38,7 @@ class GameReaperTest {
     private final PresenceTracker presence = new PresenceTracker(clock);
     private final GameService game = new GameService(players, mountain, new InventoryService(),
             new CraftingService(new RecipeBook()), coordinator, mock(GameWebSocketHandler.class),
-            presence, clock);
+            presence, mock(MonsterService.class), clock);
 
     private final UUID id = UUID.randomUUID();
 

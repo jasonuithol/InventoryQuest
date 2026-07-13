@@ -52,9 +52,9 @@ public class MountainService {
     }
 
     /**
-     * Give a square a small random pile of loot the first time anyone stands on it — always
-     * including the gear needed to climb out of this level, so the ascent is always achievable
-     * (if you can find the backpack space for it).
+     * Give a square a small random pile of loot the first time anyone stands on it. The gear needed
+     * to climb out of a level is <em>not</em> seeded — it must be crafted from the drop of that
+     * level's roaming monster (yeti → snow jacket, wolf → cleats, and so on).
      */
     @Transactional
     public void seedIfEmpty(Position position) {
@@ -65,6 +65,5 @@ public class MountainService {
         for (int i = 0; i < count; i++) {
             scatter(position, SPAWN_TABLE[ThreadLocalRandom.current().nextInt(SPAWN_TABLE.length)]);
         }
-        ClimbGear.requiredToLeave(position.level()).ifPresent(gear -> scatter(position, gear));
     }
 }

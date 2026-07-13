@@ -39,7 +39,8 @@ class GameCraftTest {
     // Real domain services — crafting rules are exercised for real.
     private final GameService game = new GameService(players, mountain, new InventoryService(),
             new CraftingService(new RecipeBook()), coordinator, broadcaster,
-            new PresenceTracker(java.time.Clock.systemUTC()), java.time.Clock.systemUTC());
+            new PresenceTracker(java.time.Clock.systemUTC()), mock(MonsterService.class),
+            java.time.Clock.systemUTC());
 
     private Player playerWith(Backpack backpack) {
         Player p = new Player();

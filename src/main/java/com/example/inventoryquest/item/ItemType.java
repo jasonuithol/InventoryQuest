@@ -32,6 +32,12 @@ public enum ItemType {
     RING("💍", 1, ItemKind.ARTIFACT, EquipSlot.RING, 0, 0),
     AMULET("📿", 1, ItemKind.ARTIFACT, EquipSlot.AMULET, 0, 0),
 
+    // ── Monster drops: crafting ingredients for the gateway gear of each level ──────
+    YETI_PELT("🧶", 1, ItemKind.INGREDIENT, null, 0, 0),     // → 🧥 snow jacket
+    WOLF_TEETH("🦷", 1, ItemKind.INGREDIENT, null, 0, 0),    // → 🥾 cleats
+    WIZARD_STAFF("🪄", 1, ItemKind.INGREDIENT, null, 0, 0),  // → ⛏️ ice pick
+    ALIEN_SUIT("🥽", 1, ItemKind.INGREDIENT, null, 0, 0),    // → 🫁 oxygen tank
+
     // ── Relic: dropped by a frozen corpsical, free for whoever finds the location ───
     CORPSICAL_SHARD("🧊", 1, ItemKind.RELIC, null, 0, 0);
 

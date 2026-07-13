@@ -114,6 +114,19 @@ public class GameController {
         return act(id, model, () -> game.castVote(id, option));
     }
 
+    @PostMapping("/game/{id}/hunt")
+    public String hunt(@PathVariable UUID id, Model model) {
+        presence.touch(id);
+        String message;
+        try {
+            message = game.hunt(id);
+        } catch (InventoryException | CraftingException | GameException | CombatException e) {
+            message = e.getMessage();
+        }
+        model.addAttribute("s", game.snapshot(id, Set.of(), message));
+        return "game :: screen";
+    }
+
     @PostMapping("/game/{id}/fight/attack/{targetId}")
     public String attack(@PathVariable UUID id, @PathVariable UUID targetId, Model model) {
         return act(id, model, () -> game.attack(id, targetId));

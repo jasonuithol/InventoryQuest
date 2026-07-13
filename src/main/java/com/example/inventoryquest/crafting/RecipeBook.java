@@ -20,7 +20,13 @@ public class RecipeBook {
                     ItemType.IRON_BAR, ItemType.IRON_BAR, ItemType.IRON_BAR, ItemType.IRON_BAR,
                     ItemType.WOOD, ItemType.WOOD),
             Recipe.of(ItemType.RING, ItemType.JEWEL, ItemType.IRON_BAR),
-            Recipe.of(ItemType.AMULET, ItemType.JEWEL, ItemType.JEWEL, ItemType.LEATHER)
+            Recipe.of(ItemType.AMULET, ItemType.JEWEL, ItemType.JEWEL, ItemType.LEATHER),
+
+            // Gateway gear — each ascent's kit, crafted from that level's monster drop.
+            Recipe.of(ItemType.SNOW_JACKET, ItemType.YETI_PELT),
+            Recipe.of(ItemType.CLEATS, ItemType.WOLF_TEETH),
+            Recipe.of(ItemType.ICE_PICK, ItemType.WIZARD_STAFF),
+            Recipe.of(ItemType.OXYGEN_TANK, ItemType.ALIEN_SUIT)
     );
 
     public List<Recipe> all() {

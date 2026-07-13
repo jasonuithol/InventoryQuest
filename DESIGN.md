@@ -153,18 +153,39 @@ placed items return to their owners and the square votes again.
 Each ascent is gated on **carrying that level's gear** in your backpack — not
 worn, *carried*, so it competes with loot and ingredients for space:
 
-| Climb from | Requires |
-|---|---|
-| Level 0 → 1 | 🧥 snow jacket (2×2) |
-| Level 1 → 2 | 🥾 cleats (1×1) |
-| Level 2 → 3 | ⛏️ ice pick (2×2) |
-| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) |
+| Climb from | Requires | Crafted from (this level's monster drop) |
+|---|---|---|
+| Level 0 → 1 | 🧥 snow jacket (2×2) | 🧶 yeti pelt |
+| Level 1 → 2 | 🥾 cleats (1×1) | 🦷 wolf teeth |
+| Level 2 → 3 | ⛏️ ice pick (2×2) | 🪄 evil wizard's staff |
+| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) | 🥽 alien space suit |
 
-The mountain seeds each level's gear onto that level's squares, so the climb is
-always *achievable* — but the 🫁 oxygen tank alone is nine cells of a thirty-cell
-pack. The mountain makes you choose between hoarding and ascending. You keep the
-gear as you climb; a full summit run means hauling all four pieces if you want to
-keep them.
+The gear is **not lying around** — it must be **crafted**, and the only source of
+its ingredient is the level's roaming monster (see below). So each ascent is a
+little quest: hunt the beast, take its drop, craft the kit, and *then* climb —
+all while the 🫁 oxygen tank alone eats nine cells of a thirty-cell pack. The
+mountain makes you choose between hoarding and ascending. You keep the gear as you
+climb; a full summit run means hauling all four pieces if you want to keep them.
+
+### Monsters — one per level, each guarding the way up
+
+Every level below the summit is prowled by its own **roaming monster**, wandering
+one square at a time. Meet one and you can **hunt** it (a solo action, off the PvP
+vote): you swing your equipped weapon — it can miss — and if it survives, it hits
+back. Fell it and it drops the crafting ingredient for that level's gateway gear,
+then another of its kind respawns to keep the level dangerous.
+
+| Level | Monster | Drops | HP / bite |
+|---|---|---|---|
+| 0 | 🧟 yeti | 🧶 yeti pelt | 6 / 1 |
+| 1 | 🐺 wolf | 🦷 wolf teeth | 8 / 2 |
+| 2 | 🧙 evil wizard | 🪄 staff | 12 / 3 |
+| 3 | 👽 alien | 🥽 space suit | 16 / 4 |
+
+The ramp is deliberate: a bare-handed climber can just about wrestle a yeti, but
+the alien wants a real weapon and a few snacks first — so the loop *find loot →
+craft a weapon → hunt → craft gear → climb* is the spine of a run. Die to a
+monster and you freeze into a corpsical, same as any other death.
 
 ---
 

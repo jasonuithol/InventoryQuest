@@ -53,11 +53,13 @@ public class GameService {
     private final SquareCoordinator coordinator;
     private final GameWebSocketHandler broadcaster;
     private final PresenceTracker presence;
+    private final MonsterService monsters;
     private final Clock clock;
 
     public GameService(PlayerService players, MountainService mountain, InventoryService inventory,
                        CraftingService crafting, SquareCoordinator coordinator,
-                       GameWebSocketHandler broadcaster, PresenceTracker presence, Clock clock) {
+                       GameWebSocketHandler broadcaster, PresenceTracker presence,
+                       MonsterService monsters, Clock clock) {
         this.players = players;
         this.mountain = mountain;
         this.inventory = inventory;
@@ -65,6 +67,7 @@ public class GameService {
         this.coordinator = coordinator;
         this.broadcaster = broadcaster;
         this.presence = presence;
+        this.monsters = monsters;
         this.clock = clock;
     }
 
@@ -337,6 +340,51 @@ public class GameService {
         }
     }
 
+    // ── Hunting monsters ────────────────────────────────────────────────────────────
+
+    /**
+     * Take one swing at the monster roaming your square. It hits back if it survives; slay it and it
+     * drops its ingredient onto the ground. Returns the blow-by-blow for the message strip.
+     */
+    @Transactional
+    public String hunt(UUID playerId) {
+        Player player = players.require(playerId);
+        GameState state = stateFor(player);
+        if (state != GameState.IDLE) {
+            throw new GameException("You can't hunt while " + state.name().toLowerCase().replace('_', ' '));
+        }
+        Position pos = player.position();
+        MonsterService.HuntOutcome o = monsters.hunt(pos.level(), pos.index(), attackDamage(player));
+        if (!o.encountered()) {
+            throw new GameException("There is nothing here to hunt");
+        }
+
+        String message;
+        if (o.monsterSlain()) {
+            mountain.scatter(pos, o.drop());
+            message = "🗡️ You slew the " + o.monsterName() + "! It dropped "
+                    + o.drop().emoji() + " " + o.drop().displayName() + " — craft it into your gear.";
+        } else {
+            String swing = o.playerHit()
+                    ? "You strike the " + o.monsterName() + " (" + o.monsterHpAfter() + "/" + o.maxHp() + " HP left). "
+                    : "You swing at the " + o.monsterName() + " and miss. ";
+            if (o.monsterHit()) {
+                int remaining = player.getHealth() - o.playerDamage();
+                if (remaining <= 0) {
+                    becomeCorpsical(playerId, "slain by a " + o.monsterName());
+                    return "💀 The " + o.monsterName() + " cuts you down — you freeze where you fall.";
+                }
+                player.setHealth(remaining);
+                players.save(player);
+                message = swing + "It hits back for " + o.playerDamage() + " HP!";
+            } else {
+                message = swing + "It lunges back and misses.";
+            }
+        }
+        broadcaster.broadcastSquare(pos.level(), pos.index());
+        return message;
+    }
+
     // ── Trading ───────────────────────────────────────────────────────────────────
 
     @Transactional
@@ -448,10 +496,14 @@ public class GameService {
 
         int idleSeconds = (int) presence.secondsUntilIdle(playerId);
 
+        GameSnapshot.MonsterView monster = monsters.sighting(pos.level(), pos.index())
+                .map(s -> new GameSnapshot.MonsterView(s.emoji(), s.name(), s.hp(), s.maxHp()))
+                .orElse(null);
+
         return new GameSnapshot(player, Hearts.render(player.getHealth()), idleSeconds, state,
                 RingMath.squaresAt(pos.level()), pos.level() < RingMath.SUMMIT_LEVEL, climbGear, readyToClimb,
                 ground, others, roster.size(), coordinator.hasVoted(pos.level(), pos.index(), playerId),
-                recipes, selected, tables, fight, message);
+                recipes, selected, tables, fight, monster, message);
     }
 
     /** The live recipe filter: recipes containing every selected ingredient type. */

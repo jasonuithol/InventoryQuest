@@ -33,7 +33,7 @@ class GameMoveTest {
     private final GameService game = new GameService(players, mock(MountainService.class),
             new InventoryService(), new CraftingService(new RecipeBook()), coordinator,
             mock(GameWebSocketHandler.class), new PresenceTracker(java.time.Clock.systemUTC()),
-            java.time.Clock.systemUTC());
+            mock(MonsterService.class), java.time.Clock.systemUTC());
 
     private Player playerAtBase(Backpack backpack) {
         Player p = new Player();
