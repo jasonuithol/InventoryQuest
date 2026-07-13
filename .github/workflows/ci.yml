@@ -34,3 +34,35 @@ jobs:
             target/surefire-reports/
             target/failsafe-reports/
           if-no-files-found: ignore
+
+  # Build the runtime image once, from the exact tree that passed the tests, and push it to
+  # GHCR. The VPS pulls this image instead of rebuilding — no JDK/Maven needed to deploy.
+  # Only runs on pushes to main (a fork PR can't push packages, and untested images shouldn't ship).
+  publish-image:
+    name: publish image
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Containerfile
+          push: true
+          # image names must be lowercase; the repo is InventoryQuest, so it's hardcoded here
+          tags: |
+            ghcr.io/jasonuithol/inventoryquest:latest
+            ghcr.io/jasonuithol/inventoryquest:${{ github.sha }}

@@ -4,14 +4,19 @@
 set -euo pipefail
 
 POD=iq-pod
-IMAGE="${IMAGE:-localhost/inventoryquest:local}"
+# Default to the image CI publishes to GHCR; override with IMAGE=localhost/inventoryquest:local
+# (or any tag) to run a locally-built image instead.
+IMAGE="${IMAGE:-ghcr.io/jasonuithol/inventoryquest:latest}"
 
 podman pod exists "$POD" && podman pod rm -f "$POD"
 podman pod create --name "$POD" -p 8080:8080
 
 echo "→ starting Postgres…"
+# Named volume so the database survives pod recreation and host reboots.
+# (Reset local state any time with: podman volume rm iq-pgdata)
 podman run -d --pod "$POD" --name "${POD}-db" \
   -e POSTGRES_DB=inventoryquest -e POSTGRES_USER=iq -e POSTGRES_PASSWORD=iq \
+  -v iq-pgdata:/var/lib/postgresql/data \
   docker.io/library/postgres:16 >/dev/null
 
 echo -n "→ waiting for Postgres to accept connections"
