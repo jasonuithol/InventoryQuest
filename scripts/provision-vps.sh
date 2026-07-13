@@ -117,7 +117,8 @@ as_deploy "
   cd \"\$TMP\"
   podman generate systemd --new --files --name '${POD}'
   mv ./*.service \"\$UNIT_DIR\"/
-  rmdir \"\$TMP\" 2>/dev/null || true
+  cd \"\$HOME\"                       # leave TMP before removing it, or the CWD vanishes
+  rm -rf \"\$TMP\"
   systemctl --user daemon-reload
   # Enable all three generated units (pod + both containers) so they come up on boot…
   systemctl --user enable pod-${POD}.service container-${POD}-db.service container-${POD}-app.service
