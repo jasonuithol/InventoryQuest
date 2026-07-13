@@ -79,9 +79,9 @@
               <span th:if="${worn != null}" th:text="${worn.type.emoji}">🗡️</span>
               <span th:unless="${worn != null}" class="muted" th:text="${slot.emoji}">🗡️</span>
             </span>
-            <button th:if="${s.player.equipment.get(slot) != null}"
+            <button class="deco" th:if="${s.player.equipment.get(slot) != null}" title="unequip"
                     th:attr="hx-post=@{/game/{id}/unequip/{slot}(id=${s.player.id},slot=${slot})}"
-                    hx-target="#screen" hx-swap="outerHTML">unequip</button>
+                    hx-target="#screen" hx-swap="outerHTML">⤵️</button>
             <span class="label" th:text="${slot.name().toLowerCase()}">sword</span>
           </div>
         </div>
@@ -128,10 +128,10 @@
             <div class="ground">
               <div class="g" th:each="g : ${s.ground}">
                 <span class="emoji" th:text="${g.emoji}">🧱</span>
-                <button th:disabled="${!g.fits}" th:title="${g.fits} ? 'pick up' : 'no room'"
+                <button class="deco" th:disabled="${!g.fits}"
+                        th:title="${g.fits} ? 'pick up' : 'no room in your backpack'"
                         th:attr="hx-post=@{/game/{id}/pickup/{iid}(id=${s.player.id},iid=${g.id})}"
-                        hx-target="#screen" hx-swap="outerHTML"
-                        th:text="${g.fits} ? 'pick up' : 'no fit'">pick up</button>
+                        hx-target="#screen" hx-swap="outerHTML">⬆️</button>
               </div>
             </div>
             <p class="hint">Items are picked up only if they fit — the backpack is the game.</p>
