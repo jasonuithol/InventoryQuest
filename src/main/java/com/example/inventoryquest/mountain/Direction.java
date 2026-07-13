@@ -1,13 +1,15 @@
 package com.example.inventoryquest.mountain;
 
 /**
- * The only ways to move on the mountain. You may circle your ring ({@code LEFT}/{@code RIGHT},
- * which wraps) or climb into your parent square ({@code UP}). There is no climbing down.
+ * The ways to move on the mountain. You may circle your ring ({@code LEFT}/{@code RIGHT}, which
+ * wraps), climb into your parent square ({@code UP}), or climb {@code DOWN} into one of the four
+ * child squares that feed into yours (chosen at random — you can't pick which).
  */
 public enum Direction {
     LEFT("⬅️"),
     RIGHT("➡️"),
-    UP("⬆️");
+    UP("⬆️"),
+    DOWN("⬇️");
 
     private final String emoji;
 

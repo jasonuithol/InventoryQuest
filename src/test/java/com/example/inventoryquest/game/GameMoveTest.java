@@ -92,6 +92,18 @@ class GameMoveTest {
     }
 
     @Test
+    void climbingDownLandsOnAChildSquareAndNeedsNoGear() {
+        Player climber = playerAtBase(Backpack.empty(5, 6)); // empty pack — down is ungated
+        climber.setLevel(1); // one level up; square index 5's children are 20..23 on level 0
+        wire(climber);
+
+        game.move(climber.getId(), Direction.DOWN);
+
+        assertThat(climber.getLevel()).isEqualTo(0);
+        assertThat(climber.getSquareIndex()).isBetween(20, 23);
+    }
+
+    @Test
     void movingSidewaysNeverNeedsGear() {
         Player climber = playerAtBase(Backpack.empty(5, 6)); // empty pack
         wire(climber);

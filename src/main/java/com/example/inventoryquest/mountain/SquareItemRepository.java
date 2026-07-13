@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface SquareItemRepository extends JpaRepository<SquareItem, UUID> {
 
     List<SquareItem> findByLevelAndSquareIndex(int level, int squareIndex);
+
+    void deleteByLevelAndSquareIndex(int level, int squareIndex);
 }

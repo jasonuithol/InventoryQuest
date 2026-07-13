@@ -100,9 +100,13 @@
                     th:disabled="${!s.canClimb or !s.readyToClimb}" hx-target="#screen" hx-swap="outerHTML">⬆️ Up</button>
             <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='RIGHT')}"
                     hx-target="#screen" hx-swap="outerHTML">➡️ Right</button>
+            <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='DOWN')}"
+                    th:disabled="${s.player.level == 0}" hx-target="#screen" hx-swap="outerHTML">⬇️ Down</button>
           </div>
           <p class="hint" th:if="${s.canClimb and !s.readyToClimb}">
             🏔️ To climb higher you must wear or carry <b th:text="${s.climbGear}">🧥 snow jacket</b>.</p>
+          <p class="hint" th:if="${s.player.level > 0}">⬇️ Climbing down drops you into one of the four
+            squares below — at random.</p>
           <p class="hint" th:if="${s.canClimb and s.readyToClimb and s.climbGear != null}">
             ✅ Geared up with <span th:text="${s.climbGear}">🧥 snow jacket</span> — you can climb.</p>
 

@@ -118,7 +118,10 @@ public class GameService {
                 }
             });
         }
-        Position to = RingMath.move(from, direction);
+        // Climbing down is ungated, but lands on one of the four child squares at random.
+        Position to = direction == Direction.DOWN
+                ? RingMath.down(from, java.util.concurrent.ThreadLocalRandom.current().nextInt(RingMath.MERGE_FACTOR))
+                : RingMath.move(from, direction);
         player.moveTo(to);
         mountain.seedIfEmpty(to);
         players.save(player);

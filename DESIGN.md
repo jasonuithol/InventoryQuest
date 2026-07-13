@@ -31,8 +31,15 @@ adjacent squares merge into one**:
 | 4 (summit) | 1 | 👑 |
 
 Square `i` on level `n` feeds square `⌊i/4⌋` on level `n+1`. You can move
-**left/right** around your ring (it wraps) or **up** into your parent square.
-There is no climbing down. The mountain does not do refunds.
+**left/right** around your ring (it wraps), **up** into your parent square, or
+**down** — which drops you into one of the four child squares that feed into
+yours, chosen **at random** (you can't pick which). Climbing up is gated on gear;
+climbing down is free.
+
+**Loot never sits still.** Every few seconds a random square anywhere on the
+mountain has its ground cleared and re-seeded with a fresh pile, so hoards go
+stale and new loot keeps surfacing across the map rather than only where players
+first tread.
 
 ### Meeting other players
 

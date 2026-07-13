@@ -53,17 +53,34 @@ public final class RingMath {
         return new Position(p.level() + 1, p.index() / MERGE_FACTOR);
     }
 
+    /** Climb down into the {@code child}-th (0..3) square that feeds into {@code p} (one level down). */
+    public static Position down(Position p, int child) {
+        if (p.level() <= BASE_LEVEL) {
+            throw new IllegalStateException("Already at the base — there is no down from " + p);
+        }
+        if (child < 0 || child >= MERGE_FACTOR) {
+            throw new IllegalArgumentException("child must be 0.." + (MERGE_FACTOR - 1) + ", was " + child);
+        }
+        return new Position(p.level() - 1, p.index() * MERGE_FACTOR + child);
+    }
+
     public static Position move(Position p, Direction direction) {
         return switch (direction) {
             case LEFT -> left(p);
             case RIGHT -> right(p);
             case UP -> up(p);
+            case DOWN -> throw new IllegalStateException(
+                    "DOWN lands on a random child square — resolve it with down(p, child)");
         };
     }
 
-    /** Whether {@code direction} is legal from {@code p} (only UP is ever blocked, at the summit). */
+    /** Whether {@code direction} is legal from {@code p}: UP is blocked at the summit, DOWN at the base. */
     public static boolean canMove(Position p, Direction direction) {
-        return direction != Direction.UP || p.level() < SUMMIT_LEVEL;
+        return switch (direction) {
+            case UP -> p.level() < SUMMIT_LEVEL;
+            case DOWN -> p.level() > BASE_LEVEL;
+            case LEFT, RIGHT -> true;
+        };
     }
 
     private static void requireLevel(int level) {

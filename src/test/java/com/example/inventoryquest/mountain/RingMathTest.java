@@ -53,6 +53,26 @@ class RingMathTest {
     }
 
     @Test
+    void downLandsOnOneOfTheFourChildSquares_theInverseOfUp() {
+        // square 1 on level 1 is fed by squares 4,5,6,7 on level 0
+        Position parent = new Position(1, 1);
+        assertThat(RingMath.down(parent, 0)).isEqualTo(new Position(0, 4));
+        assertThat(RingMath.down(parent, 3)).isEqualTo(new Position(0, 7));
+        // and each of those climbs right back up to the parent
+        for (int child = 0; child < RingMath.MERGE_FACTOR; child++) {
+            assertThat(RingMath.up(RingMath.down(parent, child))).isEqualTo(parent);
+        }
+    }
+
+    @Test
+    void thereIsNoDownFromTheBase() {
+        Position base = new Position(0, 10);
+        assertThat(RingMath.canMove(base, Direction.DOWN)).isFalse();
+        assertThat(RingMath.canMove(new Position(1, 0), Direction.DOWN)).isTrue();
+        assertThatThrownBy(() -> RingMath.down(base, 0)).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     void positionRejectsOutOfRangeIndex() {
         assertThatThrownBy(() -> new Position(4, 1)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Position(1, 64)).isInstanceOf(IllegalArgumentException.class);

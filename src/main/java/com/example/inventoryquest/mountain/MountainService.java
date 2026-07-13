@@ -71,6 +71,17 @@ public class MountainService {
         if (!groundItems(position).isEmpty()) {
             return;
         }
+        scatterRandomPile(position);
+    }
+
+    /** Clear a square's ground and scatter a fresh random pile — the loot-cycling refresh. */
+    @Transactional
+    public void refresh(Position position) {
+        items.deleteByLevelAndSquareIndex(position.level(), position.index());
+        scatterRandomPile(position);
+    }
+
+    private void scatterRandomPile(Position position) {
         int count = 2 + ThreadLocalRandom.current().nextInt(3); // 2..4 random items
         for (int i = 0; i < count; i++) {
             scatter(position, SPAWN_TABLE[ThreadLocalRandom.current().nextInt(SPAWN_TABLE.length)]);

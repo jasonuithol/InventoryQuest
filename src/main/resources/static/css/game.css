@@ -100,7 +100,7 @@ button.primary { background: var(--accent); color: #1a1a1a; border-color: var(--
 button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
 button.ok { background: var(--ok); color: #fff; border-color: var(--ok); }
 
-.moves { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 240px; }
+.moves { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-width: 220px; }
 .ground { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .ground .g { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .ground .g .emoji { font-size: 30px; }
