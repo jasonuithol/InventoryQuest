@@ -285,8 +285,8 @@
             <span style="font-size:24px;" th:text="${r.resultEmoji}">⚔️</span>
             <span class="arrow">⟵</span>
             <span th:each="ing : ${r.ingredients}" class="ing" th:classappend="${!ing.satisfied} ? 'missing'"
-                  th:title="${ing.have > 0} ? null : 'an ingredient you haven\'t found yet'">
-              <span th:text="${ing.have > 0 ? ing.emoji : '❓'}">🧱</span><span class="muted" th:text="'×' + ${ing.need}">×3</span>
+                  th:title="${ing.found} ? null : 'an ingredient you haven\'t found yet'">
+              <span th:text="${ing.found ? ing.emoji : '❓'}">🧱</span><span class="muted" th:text="'×' + ${ing.need}">×3</span>
             </span>
             <button class="primary" style="margin-left:auto;" th:if="${r.craftable}"
                     th:attr="hx-post=@{/game/{id}/craft/{res}(id=${s.player.id},res=${r.resultName})}"

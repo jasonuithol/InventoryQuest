@@ -3,6 +3,7 @@ package com.example.inventoryquest.player;
 import com.example.inventoryquest.inventory.Backpack;
 import com.example.inventoryquest.inventory.EquippedItem;
 import com.example.inventoryquest.item.EquipSlot;
+import com.example.inventoryquest.item.ItemType;
 import com.example.inventoryquest.mountain.Position;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +18,9 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -70,6 +73,11 @@ public class Player {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private Map<EquipSlot, EquippedItem> equipment = new EnumMap<>(EquipSlot.class);
+
+    /** Every item type this player has ever held — for the recipe panel's ❓ (once found, stays shown). */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false, columnDefinition = "jsonb")
+    private Set<ItemType> discovered = new LinkedHashSet<>();
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

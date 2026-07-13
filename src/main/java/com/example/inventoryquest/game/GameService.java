@@ -151,6 +151,7 @@ public class GameService {
                 .orElseThrow(() -> new GameException("That item is gone — someone else grabbed it"));
         PlacedItem placed = new PlacedItem(taken.getId(), type, cell.row(), cell.col());
         player.setBackpack(inventory.place(player.getBackpack(), placed));
+        markDiscovered(player);
         players.save(player);
         broadcaster.broadcastSquare(player.getLevel(), player.getSquareIndex());
     }
@@ -202,6 +203,7 @@ public class GameService {
         Optional<Cell> cell = player.getBackpack().firstFreeFor(result, selected);
         if (cell.isPresent()) {
             player.setBackpack(crafting.craft(player.getBackpack(), recipe, selected, cell.get().row(), cell.get().col()));
+            markDiscovered(player);
             players.save(player);
         } else {
             // No room even after the ingredients are consumed: craft it anyway and drop the
@@ -441,6 +443,8 @@ public class GameService {
         Backpack otherBp = moveItems(other.getBackpack(), accepter, otherGives);
         accepter.setBackpack(accepterBp);
         other.setBackpack(otherBp);
+        markDiscovered(accepter);
+        markDiscovered(other);
         players.save(accepter);
         players.save(other);
         broadcaster.broadcastSquare(accepter.getLevel(), accepter.getSquareIndex());
@@ -521,7 +525,7 @@ public class GameService {
                 .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
         Map<ItemType, Integer> available = crafting.availableIngredients(player.getBackpack());
         return crafting.recipeBook().containingAll(selectedTypes).stream()
-                .map(r -> RecipeRow.from(r, available))
+                .map(r -> RecipeRow.from(r, available, player.getDiscovered()))
                 .toList();
     }
 
@@ -660,6 +664,13 @@ public class GameService {
     /** Is the player carrying an item of this type in their backpack? */
     private boolean carries(Player player, ItemType type) {
         return player.getBackpack().items().stream().anyMatch(i -> i.type() == type);
+    }
+
+    /** Add everything currently in the backpack to the player's discovered set (monotonic). */
+    private void markDiscovered(Player player) {
+        Set<ItemType> discovered = new java.util.LinkedHashSet<>(player.getDiscovered());
+        player.getBackpack().items().forEach(i -> discovered.add(i.type()));
+        player.setDiscovered(discovered);
     }
 
     /** Does the player have this gear at all — carried in the backpack, or worn in its slot? */
