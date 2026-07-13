@@ -332,6 +332,14 @@ Design notes:
   serialize on the square aggregate (optimistic locking + retry), so two players
   can't both grab the same ground item. Everything else scales out on virtual
   threads.
+- **A fresh mountain every version**: the database persists across restarts and
+  reboots, but each *new build* starts a clean ladder. On boot the app compares
+  its build marker (a per-build timestamp stamped into `build-info.properties`) to
+  the one in `deploy_marker`; if it differs it wipes every player and ground item,
+  then records the new marker. So a reboot of the same build keeps the world, but
+  a deploy — which may change item, gear, or monster rules — never leaves stale or
+  now-invalid state behind. In-memory state (monsters, votes, presence) resets with
+  the process regardless.
 
 ## Getting started
 

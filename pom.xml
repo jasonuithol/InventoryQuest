@@ -135,6 +135,15 @@
 						</exclude>
 					</excludes>
 				</configuration>
+				<executions>
+					<!-- Stamp a build-info.properties (with a build timestamp) into the jar. Each build
+					     gets a fresh timestamp, so the app can tell a new deploy from a mere restart. -->
+					<execution>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<!-- Failsafe runs *IT integration tests during `verify`; Surefire runs the unit tests -->
 			<plugin>
