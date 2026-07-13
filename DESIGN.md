@@ -80,6 +80,28 @@ Damage subtracts hit-points; a fighter reaching zero is eliminated. Health is
 not automatically restored: you **eat** 🍎🍞🍖 food items (an action on the item)
 to heal, capped at full, consuming the food.
 
+### Presence, timeouts, and freezing
+
+The mountain does not wait. A server-side reaper ticks every second and enforces:
+
+- **Idle limit — 3 minutes.** Do nothing (no action, no page load) for three
+  minutes and you freeze. Watching counts as idle.
+- **Disconnect.** If your browser drops the connection you lose your session and
+  freeze — after a short grace (≈20s) so a refresh or a move between squares
+  doesn't kill you.
+- **Move clock — 5 seconds.** Every vote and every fight move (your turn, or a
+  parley you've been asked to answer) has a 5-second limit. Miss it and the move
+  is **forfeited**: a vote timeout shoves you out (auto-Leave), a fight turn is
+  skipped, an unanswered parley is treated as a rejection.
+- **Three strikes.** Forfeit three moves in a row and you freeze. A move made in
+  time resets the streak.
+
+Whatever the cause — slain in combat, idled out, disconnected, or forfeited into
+oblivion — you become a **frozen corpsical** at that spot: eliminated, and a
+🧊 **shard of corpsical** is left on the square for whoever passes through to pick
+up. (Presence, connection, and forfeit state are in-memory coordination state,
+never persisted; only the death itself is.)
+
 ### Trading
 
 Trades are **strictly pairwise** — a table always has exactly two sides — but a
@@ -117,7 +139,8 @@ placed items return to their owners and the square votes again.
     **combine** into artifacts;
   - **food** (🍎 apple, 🍞 bread, 🍖 meat) — eaten to restore hit-points;
   - **mountaineering gear** (🧥 snow jacket, 🥾 cleats, ⛏️ ice pick, 🫁 oxygen
-    tank) — required to climb (see below).
+    tank) — required to climb (see below);
+  - **relics** — a 🧊 shard of corpsical, dropped where a player froze.
 - Four **equipment slots** sit outside the backpack: sword, shield, ring, amulet.
 
 **Actions:** select item(s) · combine · equip · drop · eat · move up/left/right ·

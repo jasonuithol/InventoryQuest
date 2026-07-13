@@ -5,6 +5,7 @@ import com.example.inventoryquest.combat.VoteOption;
 import com.example.inventoryquest.crafting.CraftingException;
 import com.example.inventoryquest.game.GameException;
 import com.example.inventoryquest.game.GameService;
+import com.example.inventoryquest.game.PresenceTracker;
 import com.example.inventoryquest.inventory.InventoryException;
 import com.example.inventoryquest.item.EquipSlot;
 import com.example.inventoryquest.item.ItemType;
@@ -31,9 +32,11 @@ import java.util.stream.Collectors;
 public class GameController {
 
     private final GameService game;
+    private final PresenceTracker presence;
 
-    public GameController(GameService game) {
+    public GameController(GameService game, PresenceTracker presence) {
         this.game = game;
+        this.presence = presence;
     }
 
     @GetMapping("/")
@@ -49,6 +52,7 @@ public class GameController {
 
     @GetMapping("/game/{id}")
     public String screen(@PathVariable UUID id, Model model) {
+        presence.touch(id); // loading your screen counts as being present
         model.addAttribute("s", game.snapshot(id));
         return "game";
     }
@@ -159,6 +163,7 @@ public class GameController {
 
     /** Run a mutation, then re-render the whole screen — with the error surfaced if it was illegal. */
     private String act(UUID id, Model model, Runnable action) {
+        presence.touch(id); // any action keeps you from going idle
         String message = null;
         try {
             action.run();

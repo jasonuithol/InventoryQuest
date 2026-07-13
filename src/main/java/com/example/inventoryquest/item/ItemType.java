@@ -30,7 +30,10 @@ public enum ItemType {
     SWORD("⚔️", 3, ItemKind.ARTIFACT, EquipSlot.SWORD, 5, 0),     // 5 HP — over a heart
     TOWER_SHIELD("🛡️", 3, ItemKind.ARTIFACT, EquipSlot.SHIELD, 0, 0),
     RING("💍", 1, ItemKind.ARTIFACT, EquipSlot.RING, 0, 0),
-    AMULET("📿", 1, ItemKind.ARTIFACT, EquipSlot.AMULET, 0, 0);
+    AMULET("📿", 1, ItemKind.ARTIFACT, EquipSlot.AMULET, 0, 0),
+
+    // ── Relic: dropped by a frozen corpsical, free for whoever finds the location ───
+    CORPSICAL_SHARD("🧊", 1, ItemKind.RELIC, null, 0, 0);
 
     private final String emoji;
     private final int size;

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.random.RandomGenerator;
 
@@ -146,6 +147,31 @@ class FightTest {
         f.callParley(a);
         assertThatThrownBy(() -> f.attack(a, b))
                 .isInstanceOf(CombatException.class).hasMessageContaining("parley");
+    }
+
+    // ── Forfeits ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    void aForfeitedTurnIsSkippedWithNoBloodAndPassesOn() {
+        Fight f = fight(ALWAYS_HIT, map(a, 16, b, 16), map(a, 2, b, 5));
+        assertThat(f.currentTurn()).isEqualTo(a);
+
+        assertThat(f.forfeitTurn()).isEqualTo(a);
+        assertThat(f.currentTurn()).isEqualTo(b);      // turn passed
+        assertThat(f.healthOf(a)).isEqualTo(16);       // nobody took damage
+        assertThat(f.healthOf(b)).isEqualTo(16);
+    }
+
+    @Test
+    void aTimedOutParleyCollapsesLikeARejection() {
+        Fight f = fight(ALWAYS_HIT, map(a, 16, b, 16, c, 16), map(a, 2, b, 5, c, 5));
+        f.callParley(a);
+
+        Set<UUID> silent = f.forfeitParley();
+        assertThat(silent).containsExactlyInAnyOrder(b, c);   // the ones who never answered
+        assertThat(f.parleyPending()).isFalse();
+        assertThat(f.isOver()).isFalse();
+        assertThat(f.currentTurn()).isEqualTo(b);             // a's turn was spent proposing
     }
 
     // ── Membership ─────────────────────────────────────────────────────────────────

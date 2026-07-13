@@ -9,6 +9,10 @@ import com.example.inventoryquest.realtime.GameWebSocketHandler;
 import com.example.inventoryquest.trade.TradeSession;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,6 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class SquareCoordinator {
 
+    /** How long a player has to make a move (a vote, or a fight turn/parley answer) before forfeiting. */
+    public static final Duration MOVE_LIMIT = Duration.ofSeconds(5);
+
+    /** A move that timed out in a square — the reaper turns these into forfeit strikes. */
+    public record Timeout(int level, int index, UUID player) {
+    }
+
     /** What a viewer needs to render the fight from their seat — all in raw ids, names resolved above. */
     public record FightState(int myHp, int combatants, boolean myTurn, UUID currentTurn,
                              List<UUID> opponents, Map<UUID, Integer> opponentHp,
@@ -37,11 +48,20 @@ public class SquareCoordinator {
 
     /** Per-square coordination state. Guarded by {@code synchronized(this-square)}. */
     static final class Square {
+        final int level;
+        final int index;
         VoteRound vote;
         VoteResolution resolution;
         TradeSession trade;
         Fight fight;
+        Instant voteDeadline;   // when the current vote round times out, or null
+        Instant turnDeadline;   // when the current fight turn / parley times out, or null
         final Set<UUID> mustMove = new LinkedHashSet<>();
+
+        Square(int level, int index) {
+            this.level = level;
+            this.index = index;
+        }
 
         boolean fighting() {
             return fight != null;
@@ -49,6 +69,7 @@ public class SquareCoordinator {
 
         void endFight() {
             fight = null;
+            turnDeadline = null;
         }
 
         void clear() {
@@ -57,20 +78,34 @@ public class SquareCoordinator {
             trade = null;
             endFight();
             mustMove.clear();
+            voteDeadline = null;
         }
     }
 
     private final Map<String, Square> squares = new ConcurrentHashMap<>();
     private final CombatService combatService;
     private final GameWebSocketHandler broadcaster;
+    private final Clock clock;
 
-    public SquareCoordinator(CombatService combatService, GameWebSocketHandler broadcaster) {
+    public SquareCoordinator(CombatService combatService, GameWebSocketHandler broadcaster, Clock clock) {
         this.combatService = combatService;
         this.broadcaster = broadcaster;
+        this.clock = clock;
     }
 
     private Square square(int level, int index) {
-        return squares.computeIfAbsent(GameWebSocketHandler.squareKey(level, index), k -> new Square());
+        return squares.computeIfAbsent(GameWebSocketHandler.squareKey(level, index),
+                k -> new Square(level, index));
+    }
+
+    /** (Re)start the vote timer for a square. */
+    private void armVote(Square sq) {
+        sq.voteDeadline = clock.instant().plus(MOVE_LIMIT);
+    }
+
+    /** (Re)start the fight turn/parley timer, or clear it once the fight is over. */
+    private void armTurn(Square sq) {
+        sq.turnDeadline = (sq.fighting() && !sq.fight.isOver()) ? clock.instant().plus(MOVE_LIMIT) : null;
     }
 
     /** A player has entered the square. Applies the readme's arrival rules. */
@@ -89,11 +124,13 @@ public class SquareCoordinator {
                 // arrival during a fight joins the ongoing fight (and calls off any parley)
                 sq.fight.join(arriving, healthByPlayer.getOrDefault(arriving, 1),
                         damageByPlayer.getOrDefault(arriving, CombatService.UNARMED_DAMAGE));
+                armTurn(sq);
             } else if (rosterAfter.size() <= 1) {
                 sq.clear(); // back to solo
             } else if (sq.vote == null || sq.resolution != null) {
                 sq.vote = new VoteRound(rosterAfter);
                 sq.resolution = null;
+                armVote(sq);
             } else {
                 sq.vote.join(arriving);
             }
@@ -127,6 +164,7 @@ public class SquareCoordinator {
         synchronized (sq) {
             if (sq.vote == null) {
                 sq.vote = new VoteRound(Set.of(player));
+                armVote(sq);
             }
             sq.vote.cast(player, option);
             resolved = sq.vote.resolve();
@@ -147,6 +185,7 @@ public class SquareCoordinator {
                 damage.put(f, damageByPlayer.getOrDefault(f, CombatService.UNARMED_DAMAGE));
             });
             sq.fight = combatService.begin(health, damage);
+            armTurn(sq);
         } else {
             sq.mustMove.clear();
             sq.mustMove.addAll(res.mustMove());
@@ -168,6 +207,8 @@ public class SquareCoordinator {
             eliminated = out.eliminated() ? Set.of(out.target()) : Set.of();
             if (sq.fight.isOver()) {
                 concludeFight(sq);
+            } else {
+                armTurn(sq);
             }
         }
         broadcaster.broadcastSquare(level, index);
@@ -180,6 +221,7 @@ public class SquareCoordinator {
         synchronized (sq) {
             if (sq.fighting()) {
                 sq.fight.callParley(proposer);
+                armTurn(sq);   // opponents now have the clock to answer
             }
         }
         broadcaster.broadcastSquare(level, index);
@@ -195,6 +237,8 @@ public class SquareCoordinator {
             sq.fight.answerParley(responder, accept);
             if (sq.fight.isOver()) {
                 concludeFight(sq);
+            } else {
+                armTurn(sq);
             }
         }
         broadcaster.broadcastSquare(level, index);
@@ -209,7 +253,81 @@ public class SquareCoordinator {
         Set<UUID> survivors = sq.fight.combatants();
         sq.endFight();
         sq.resolution = null;
-        sq.vote = peace && survivors.size() > 1 ? new VoteRound(survivors) : null;
+        if (peace && survivors.size() > 1) {
+            sq.vote = new VoteRound(survivors);
+            armVote(sq);
+        } else {
+            sq.vote = null;
+        }
+    }
+
+    // ── Timeout sweeps (driven by the reaper) ──────────────────────────────────────────
+
+    /**
+     * Resolve every vote round whose 5-second clock has run out: non-voters are auto-cast as Leave
+     * (they get shoved out) and the round resolves. Returns each forfeited move for striking.
+     */
+    public List<Timeout> sweepVotes(Instant now) {
+        List<Timeout> timeouts = new ArrayList<>();
+        List<Square> touched = new ArrayList<>();
+        for (Square sq : squares.values()) {
+            synchronized (sq) {
+                if (sq.vote == null || sq.resolution != null || sq.voteDeadline == null) {
+                    continue;
+                }
+                if (sq.vote.roster().size() <= 1 || now.isBefore(sq.voteDeadline)) {
+                    continue;
+                }
+                Set<UUID> nonVoters = new LinkedHashSet<>(sq.vote.roster());
+                nonVoters.removeAll(sq.vote.votes().keySet());
+                sq.voteDeadline = null;
+                if (nonVoters.isEmpty()) {
+                    continue; // everyone voted; resolution is handled on the voting path
+                }
+                nonVoters.forEach(nv -> sq.vote.cast(nv, VoteOption.LEAVE));
+                sq.vote.resolve().ifPresent(r -> applyResolution(sq, r, Map.of(), Map.of()));
+                nonVoters.forEach(nv -> timeouts.add(new Timeout(sq.level, sq.index, nv)));
+                touched.add(sq);
+            }
+        }
+        touched.forEach(sq -> broadcaster.broadcastSquare(sq.level, sq.index));
+        return timeouts;
+    }
+
+    /**
+     * Advance every fight whose current turn (or pending parley) has run out of time: the current
+     * fighter's turn is skipped, or an unanswered parley collapses. Returns each forfeited move.
+     */
+    public List<Timeout> sweepFights(Instant now) {
+        List<Timeout> timeouts = new ArrayList<>();
+        List<Square> touched = new ArrayList<>();
+        for (Square sq : squares.values()) {
+            List<UUID> forfeiters = new ArrayList<>();
+            synchronized (sq) {
+                if (!sq.fighting() || sq.turnDeadline == null || now.isBefore(sq.turnDeadline)) {
+                    continue;
+                }
+                if (sq.fight.parleyPending()) {
+                    forfeiters.addAll(sq.fight.forfeitParley());
+                } else {
+                    UUID skipped = sq.fight.forfeitTurn();
+                    if (skipped != null) {
+                        forfeiters.add(skipped);
+                    }
+                }
+                if (sq.fight.isOver()) {
+                    concludeFight(sq);
+                } else {
+                    armTurn(sq);
+                }
+            }
+            if (!forfeiters.isEmpty()) {
+                forfeiters.forEach(f -> timeouts.add(new Timeout(sq.level, sq.index, f)));
+                touched.add(sq);
+            }
+        }
+        touched.forEach(sq -> broadcaster.broadcastSquare(sq.level, sq.index));
+        return timeouts;
     }
 
     // ── Reads ──────────────────────────────────────────────────────────────────────────

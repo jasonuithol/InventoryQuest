@@ -26,6 +26,8 @@ import com.example.inventoryquest.trade.TradeTable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,16 +52,20 @@ public class GameService {
     private final CraftingService crafting;
     private final SquareCoordinator coordinator;
     private final GameWebSocketHandler broadcaster;
+    private final PresenceTracker presence;
+    private final Clock clock;
 
     public GameService(PlayerService players, MountainService mountain, InventoryService inventory,
                        CraftingService crafting, SquareCoordinator coordinator,
-                       GameWebSocketHandler broadcaster) {
+                       GameWebSocketHandler broadcaster, PresenceTracker presence, Clock clock) {
         this.players = players;
         this.mountain = mountain;
         this.inventory = inventory;
         this.crafting = crafting;
         this.coordinator = coordinator;
         this.broadcaster = broadcaster;
+        this.presence = presence;
+        this.clock = clock;
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────────────────────
@@ -239,6 +245,7 @@ public class GameService {
         Position pos = player.position();
         coordinator.castVote(pos.level(), pos.index(), playerId, option,
                 healthByPlayer(pos), attackDamageByPlayer(pos));
+        presence.resetForfeits(playerId); // a move made in time
     }
 
     /** On your turn, swing at one chosen opponent. One attack is one turn. */
@@ -247,6 +254,7 @@ public class GameService {
         Player player = players.require(playerId);
         Position pos = player.position();
         Set<UUID> eliminated = coordinator.attack(pos.level(), pos.index(), playerId, targetId);
+        presence.resetForfeits(playerId); // a move made in time
         persistFightOutcome(pos, eliminated);
     }
 
@@ -256,6 +264,7 @@ public class GameService {
         Player player = players.require(playerId);
         Position pos = player.position();
         coordinator.callParley(pos.level(), pos.index(), playerId);
+        presence.resetForfeits(playerId);
     }
 
     /** Accept or reject a parley you have been offered. One rejection keeps the fight going. */
@@ -264,9 +273,10 @@ public class GameService {
         Player player = players.require(playerId);
         Position pos = player.position();
         coordinator.answerParley(pos.level(), pos.index(), playerId, accept);
+        presence.resetForfeits(playerId);
     }
 
-    /** Persist the health left by a combat action, and eliminate anyone the swing dropped to zero. */
+    /** Persist the health left by a combat action, and freeze anyone the swing dropped to zero. */
     private void persistFightOutcome(Position pos, Set<UUID> eliminated) {
         Map<UUID, Integer> health = coordinator.fightHealth(pos.level(), pos.index());
         health.forEach((id, hp) -> {
@@ -275,11 +285,55 @@ public class GameService {
             players.save(p);
         });
         for (UUID id : eliminated) {
-            Player dead = players.require(id);
-            dead.setHealth(0);
-            dead.setAlive(false);
-            players.save(dead);
-            coordinator.onDeparture(pos.level(), pos.index(), id, rosterIds(pos, id));
+            becomeCorpsical(id, "slain in combat");
+        }
+    }
+
+    // ── Death & the reaper ─────────────────────────────────────────────────────────────
+
+    /**
+     * Turn a player into a frozen corpsical: eliminated, health zero, with a 🧊 shard left on their
+     * square for whoever finds it. Idempotent — a player already gone is simply forgotten.
+     */
+    @Transactional
+    public void becomeCorpsical(UUID playerId, String cause) {
+        Player player;
+        try {
+            player = players.require(playerId);
+        } catch (RuntimeException notFound) {
+            presence.forget(playerId);
+            return;
+        }
+        if (!player.isAlive()) {
+            presence.forget(playerId);
+            return;
+        }
+        Position pos = player.position();
+        player.setHealth(0);
+        player.setAlive(false);
+        players.save(player);
+        mountain.scatter(pos, ItemType.CORPSICAL_SHARD);   // a shard marks the spot
+        presence.forget(playerId);
+        coordinator.onDeparture(pos.level(), pos.index(), playerId, rosterIds(pos, playerId));
+        broadcaster.broadcastSquare(pos.level(), pos.index());
+    }
+
+    /**
+     * The reaper's tick (driven every second): freeze the idle and the long-disconnected, then apply
+     * vote and fight move-timeouts, freezing anyone who has now forfeited three moves in a row.
+     */
+    @Transactional
+    public void reap() {
+        Instant now = clock.instant();
+        presence.due().forEach(id -> becomeCorpsical(id, "frozen (idle or disconnected)"));
+        coordinator.sweepVotes(now).forEach(this::applyForfeit);
+        coordinator.sweepFights(now).forEach(this::applyForfeit);
+    }
+
+    private void applyForfeit(SquareCoordinator.Timeout timeout) {
+        int streak = presence.recordForfeit(timeout.player());
+        if (streak >= PresenceTracker.MAX_FORFEITS) {
+            becomeCorpsical(timeout.player(), "forfeited three moves in a row");
         }
     }
 

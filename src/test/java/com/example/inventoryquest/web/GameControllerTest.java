@@ -35,6 +35,9 @@ class GameControllerTest {
     @MockitoBean
     GameService game;
 
+    @MockitoBean
+    com.example.inventoryquest.game.PresenceTracker presence;
+
     private Player samplePlayer() {
         return Player.spawn("Ada", 5, Instant.parse("2026-01-01T00:00:00Z"));
     }

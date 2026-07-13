@@ -9,5 +9,7 @@ public enum ItemKind {
     INGREDIENT,
     FOOD,
     /** Mountaineering gear required to climb to the next level (snow jacket, cleats, ...). */
-    GEAR
+    GEAR,
+    /** What a frozen player leaves behind — a shard of corpsical, there for the taking. */
+    RELIC
 }

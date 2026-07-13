@@ -120,6 +120,8 @@
           </div>
           <p class="hint" th:if="${s.hasVoted}">Vote cast. Waiting for the others…</p>
           <p class="hint">If anyone votes Fight, everyone fights.</p>
+          <p class="hint">⏱ Vote within 5 seconds or you're shoved out — three missed moves in a
+            row and you freeze.</p>
         </div>
 
         <!-- TRADING -->
@@ -204,12 +206,16 @@
           </div>
           <p class="hint">Fighters take turns. Each attack is one turn. Anyone can call a parley —
             it ends the fight only if <em>every</em> opponent accepts.</p>
+          <p class="hint">⏱ You have 5 seconds to act on your turn or it's forfeited — three
+            forfeits in a row and you freeze into a corpsical.</p>
         </div>
 
-        <!-- ELIMINATED -->
+        <!-- ELIMINATED (a frozen corpsical) -->
         <div th:if="${s.state.name() == 'ELIMINATED'}">
-          <h2>👻 Eliminated</h2>
-          <p class="muted">The mountain does not do refunds.</p>
+          <h2>🧊 Frozen Corpsical</h2>
+          <p class="muted">You froze where you stood — slain, disconnected, idled out, or out of
+            nerve. A 🧊 shard of you is left at that spot for whoever passes by. The mountain does
+            not do refunds.</p>
         </div>
 
         <!-- Recipe panel: live filter over the current selection -->

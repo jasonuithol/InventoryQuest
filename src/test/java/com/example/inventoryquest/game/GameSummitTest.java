@@ -30,7 +30,8 @@ class GameSummitTest {
     private final SquareCoordinator coordinator = mock(SquareCoordinator.class);
     private final GameService game = new GameService(players, mountain,
             new InventoryService(), new CraftingService(new RecipeBook()), coordinator,
-            mock(GameWebSocketHandler.class));
+            mock(GameWebSocketHandler.class), new PresenceTracker(java.time.Clock.systemUTC()),
+            java.time.Clock.systemUTC());
 
     private Player playerAtSummit() {
         Player p = new Player();

@@ -32,7 +32,8 @@ class GameMoveTest {
     private final SquareCoordinator coordinator = mock(SquareCoordinator.class);
     private final GameService game = new GameService(players, mock(MountainService.class),
             new InventoryService(), new CraftingService(new RecipeBook()), coordinator,
-            mock(GameWebSocketHandler.class));
+            mock(GameWebSocketHandler.class), new PresenceTracker(java.time.Clock.systemUTC()),
+            java.time.Clock.systemUTC());
 
     private Player playerAtBase(Backpack backpack) {
         Player p = new Player();

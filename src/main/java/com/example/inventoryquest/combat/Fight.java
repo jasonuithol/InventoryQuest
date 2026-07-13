@@ -145,6 +145,30 @@ public class Fight {
         }
     }
 
+    // ── Forfeits (a move that ran out of time) ─────────────────────────────────────────
+
+    /** The current fighter ran out of time: their turn is skipped. Returns who forfeited. */
+    public UUID forfeitTurn() {
+        requireLive();
+        if (parley != null) {
+            throw new CombatException("A parley is pending, not a turn");
+        }
+        UUID forfeiter = current;
+        advanceTurn();
+        return forfeiter;
+    }
+
+    /** The parley timed out: treat it as rejected (fight resumes). Returns who failed to answer. */
+    public Set<UUID> forfeitParley() {
+        if (parley == null) {
+            throw new CombatException("There is no parley to time out");
+        }
+        Set<UUID> silent = new LinkedHashSet<>(parley.awaiting);
+        parley = null;      // unanswered = the truce collapses
+        advanceTurn();      // the proposer's turn is spent
+        return silent;
+    }
+
     // ── Membership changes ─────────────────────────────────────────────────────────────
 
     /** A player entering the square joins the ongoing fight; any pending parley is called off. */

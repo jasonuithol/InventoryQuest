@@ -28,7 +28,8 @@ class GameEatTest {
     private final PlayerService players = mock(PlayerService.class);
     private final GameService game = new GameService(players, mock(MountainService.class),
             new InventoryService(), new CraftingService(new RecipeBook()),
-            mock(SquareCoordinator.class), mock(GameWebSocketHandler.class));
+            mock(SquareCoordinator.class), mock(GameWebSocketHandler.class),
+            new PresenceTracker(java.time.Clock.systemUTC()), java.time.Clock.systemUTC());
 
     private Player playerWith(int health, PlacedItem item) {
         Player p = new Player();

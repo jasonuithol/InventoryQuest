@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.UUID;
 
@@ -29,6 +30,11 @@ class GameFlowIT {
 
     @Autowired
     GameService game;
+
+    // Freeze the reaper for this test: the 5-second vote clock must not auto-resolve the round
+    // out from under the assertions. The reaper's own behaviour is covered by GameReaperTest.
+    @MockitoBean
+    ReaperService reaper;
 
     @Test
     void aVoteForTradeOpensATradeTable() {
