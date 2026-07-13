@@ -75,18 +75,19 @@
         </div>
 
         <h2 style="margin-top:16px;">Equipment</h2>
+        <!-- Only occupied slots show — an empty slot stays hidden until you equip something for it,
+             so which slots even exist is part of the mystery. -->
         <div class="equipment">
-          <div class="eqslot" th:each="slot : ${T(com.example.inventoryquest.item.EquipSlot).values()}">
-            <span th:with="worn=${s.player.equipment.get(slot)}">
-              <span th:if="${worn != null}" th:text="${worn.type.emoji}">🗡️</span>
-              <span th:unless="${worn != null}" class="muted" th:text="${slot.emoji}">🗡️</span>
-            </span>
-            <button class="deco" th:if="${s.player.equipment.get(slot) != null}" title="unequip"
-                    th:attr="hx-post=@{/game/{id}/unequip/{slot}(id=${s.player.id},slot=${slot})}"
+          <div class="eqslot" th:each="e : ${s.player.equipment}">
+            <span th:text="${e.value.type.emoji}">🗡️</span>
+            <button class="deco" title="unequip"
+                    th:attr="hx-post=@{/game/{id}/unequip/{slot}(id=${s.player.id},slot=${e.key})}"
                     hx-target="#screen" hx-swap="outerHTML">⤵️</button>
-            <span class="label" th:text="${slot.name().toLowerCase()}">sword</span>
+            <span class="label" th:text="${e.key.name().toLowerCase()}">sword</span>
           </div>
         </div>
+        <p class="muted" th:if="${s.player.equipment.isEmpty()}" style="font-size:13px; margin-top:8px;">
+          Nothing equipped — who knows what fits where?</p>
       </div>
 
       <!-- RIGHT: state-specific context panel (nested fragment; also fetched alone on a WS nudge) -->
