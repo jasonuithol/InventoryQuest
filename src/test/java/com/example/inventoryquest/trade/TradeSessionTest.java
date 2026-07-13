@@ -55,4 +55,19 @@ class TradeSessionTest {
         session.interruptAll();
         assertThat(session.tables()).allMatch(t -> t.state() == TradeState.INTERRUPTED);
     }
+
+    @Test
+    void oneTraderLeavingKeepsTheOthersHaggling() {
+        TradeSession session = new TradeSession(new LinkedHashSet<>(Set.of(a, b, c)));
+        UUID jewel = UUID.randomUUID();
+        session.place(session.tableBetween(b, c).orElseThrow().id(), b, jewel); // b & c mid-deal
+
+        session.leave(a); // a walks off
+
+        assertThat(session.traders()).containsExactlyInAnyOrder(b, c);
+        assertThat(session.tables()).hasSize(1);                    // only b–c remains (a's two dropped)
+        assertThat(session.tableBetween(b, c)).isPresent();
+        assertThat(session.tableBetween(a, b)).isEmpty();
+        assertThat(session.isItemOnAnyTable(b, jewel)).isTrue();    // b & c's deal is untouched
+    }
 }

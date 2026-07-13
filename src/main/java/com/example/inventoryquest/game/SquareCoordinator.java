@@ -150,14 +150,16 @@ public class SquareCoordinator {
                 }
             }
             if (sq.trade != null) {
-                // Someone walked away from the negotiation: return any unfinished items to their
-                // owners (accepted swaps stand) and close the tables so no one is left staring at a
-                // trader who has left. Whoever remains drops back to idle and can move on.
-                sq.trade.interruptAll();
-                sq.trade = null;
-                sq.resolution = null;
-                sq.vote = null;
-                sq.mustMove.clear();
+                // Someone walked away: drop only their tables (their unfinished offers return),
+                // and the traders who stayed keep haggling. The session only ends once fewer than
+                // two traders remain — a lone trader has no one left to deal with.
+                sq.trade.leave(leaving);
+                if (sq.trade.traders().size() < 2) {
+                    sq.trade = null;
+                    sq.resolution = null;
+                    sq.vote = null;
+                    sq.mustMove.clear();
+                }
             }
             if (rosterAfter.size() <= 1) {
                 sq.clear();

@@ -80,4 +80,22 @@ public class TradeSession {
             }
         });
     }
+
+    /**
+     * A trader walks away: drop only <em>their</em> tables (returning the other side's offered items;
+     * accepted swaps already stand), and remove them from the roster. Every table between the traders
+     * who stayed is left exactly as it was, so they carry on haggling.
+     */
+    public void leave(UUID player) {
+        tables.removeIf(t -> {
+            if (!t.involves(player)) {
+                return false;
+            }
+            if (t.state() != TradeState.ACCEPTED) {
+                t.interrupt(); // un-offer the stayer's items; the leaver takes their own with them
+            }
+            return true;
+        });
+        traders.remove(player);
+    }
 }
