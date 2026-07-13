@@ -31,8 +31,9 @@
      th:attr="ws-connect=@{/ws(playerId=${s.player.id},level=${s.player.level},index=${s.player.squareIndex})}">
   <div class="wrap">
 
-    <!-- Status strip: elevation, health, state badge — always agrees with the panel -->
+    <!-- Status strip: who you are, elevation, health, state badge — always agrees with the panel -->
     <div class="strip">
+      <span class="who">🧗 <b th:text="${s.player.name}">Climber</b></span>
       <span>⛰️ Level <b th:text="${s.player.level}">0</b> · <span th:text="${s.squareCount}">256</span> squares</span>
       <span class="crown" th:if="${s.squareCount == 1}" title="The summit — last square standing">👑 Summit</span>
       <span class="hearts" th:text="${s.hearts}">❤️❤️❤️❤️</span>
@@ -41,6 +42,7 @@
             title="You freeze if idle this long — any action resets it">
         💤 <b id="idle-timer" th:attr="data-remaining=${s.idleSeconds}">10:00</b></span>
       <span class="badge" th:classappend="${s.state}" th:text="${s.state}">IDLE</span>
+      <a class="newgame" th:href="@{/}" title="Start a new game with a fresh climber">🆕 New Game</a>
     </div>
 
     <div class="msg" th:text="${s.message}"></div>
@@ -94,14 +96,16 @@
         <div th:if="${s.state.name() == 'IDLE' or s.state.name() == 'MUST_MOVE'}">
           <h2 th:text="${s.state.name() == 'MUST_MOVE'} ? 'You voted Leave — move' : 'Move'">Move</h2>
           <div class="moves">
-            <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='LEFT')}"
-                    hx-target="#screen" hx-swap="outerHTML">⬅️ Left</button>
-            <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='UP')}"
-                    th:disabled="${!s.canClimb or !s.readyToClimb}" hx-target="#screen" hx-swap="outerHTML">⬆️ Up</button>
-            <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='RIGHT')}"
-                    hx-target="#screen" hx-swap="outerHTML">➡️ Right</button>
-            <button th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='DOWN')}"
-                    th:disabled="${s.player.level == 0}" hx-target="#screen" hx-swap="outerHTML">⬇️ Down</button>
+            <button class="up" th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='UP')}"
+                    th:disabled="${!s.canClimb or !s.readyToClimb}" hx-target="#screen" hx-swap="outerHTML"
+                    title="Up (climb — gear required)">⬆️<span>Up</span></button>
+            <button class="left" th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='LEFT')}"
+                    hx-target="#screen" hx-swap="outerHTML" title="Left">⬅️<span>Left</span></button>
+            <button class="down" th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='DOWN')}"
+                    th:disabled="${s.player.level == 0}" hx-target="#screen" hx-swap="outerHTML"
+                    title="Down (climb down to a random square below)">⬇️<span>Down</span></button>
+            <button class="right" th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='RIGHT')}"
+                    hx-target="#screen" hx-swap="outerHTML" title="Right">➡️<span>Right</span></button>
           </div>
           <p class="hint" th:if="${s.canClimb and !s.readyToClimb}">
             🏔️ To climb higher you must wear or carry <b th:text="${s.climbGear}">🧥 snow jacket</b>.</p>

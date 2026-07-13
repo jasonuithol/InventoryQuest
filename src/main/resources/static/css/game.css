@@ -25,12 +25,19 @@ a { color: var(--accent); }
 
 /* ── Status strip ─────────────────────────────────────────── */
 .strip {
-    display: flex; align-items: center; gap: 18px;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px;
     background: var(--panel-2); border: 1px solid var(--line);
     border-radius: 10px; padding: 10px 16px; margin-bottom: 12px;
     font-size: 15px;
 }
 .strip .hearts { letter-spacing: 2px; }
+.strip .who b { font-weight: 700; }
+.strip .newgame {
+    text-decoration: none; white-space: nowrap;
+    padding: 4px 12px; border-radius: 999px;
+    background: var(--accent); color: #1a1a1a; font-weight: 600; font-size: 13px;
+}
+.strip .newgame:hover { filter: brightness(1.08); }
 .strip .idle { font-size: 13px; opacity: .75; font-variant-numeric: tabular-nums; }
 .strip .idle b { font-weight: 600; }
 .strip .idle.warn { opacity: 1; color: var(--danger); }
@@ -104,7 +111,21 @@ button.primary { background: var(--accent); color: #1a1a1a; border-color: var(--
 button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
 button.ok { background: var(--ok); color: #fff; border-color: var(--ok); }
 
-.moves { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-width: 220px; }
+/* WASD-style d-pad: Up on top, Left / Down / Right across the bottom. */
+.moves {
+    display: grid; justify-content: start; gap: 6px;
+    grid-template-columns: repeat(3, 4em);
+    grid-template-areas: ".  up   ." "left down right";
+}
+.moves .up    { grid-area: up; }
+.moves .left  { grid-area: left; }
+.moves .down  { grid-area: down; }
+.moves .right { grid-area: right; }
+.moves button {
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    padding: 6px 2px; line-height: 1.1;
+}
+.moves button span { font-size: 11px; }
 .ground { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .ground .g { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .ground .g .emoji { font-size: 30px; }
