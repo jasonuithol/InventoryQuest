@@ -36,10 +36,10 @@ Square `i` on level `n` feeds square `⌊i/4⌋` on level `n+1`. You can move
 yours, chosen **at random** (you can't pick which). Climbing up is gated on gear;
 climbing down is free.
 
-**Loot never sits still.** Every few seconds a random square anywhere on the
-mountain has its ground cleared and re-seeded with a fresh pile, so hoards go
-stale and new loot keeps surfacing across the map rather than only where players
-first tread.
+**Loot never sits still.** Every few seconds a handful of random squares anywhere
+on the mountain have their ground cleared and re-seeded with fresh piles, so
+hoards go stale and new loot keeps surfacing across the map rather than only where
+players first tread.
 
 ### Meeting other players
 
