@@ -78,12 +78,13 @@
         <!-- Only occupied slots show — an empty slot stays hidden until you equip something for it,
              so which slots even exist is part of the mystery. -->
         <div class="equipment">
-          <div class="eqslot" th:each="e : ${s.player.equipment}">
+          <div class="eqslot" th:each="e : ${s.player.equipment}"
+               th:title="${e.key.name().toLowerCase() + ' — ' + e.key.perk()}">
             <span th:text="${e.value.type.emoji}">🗡️</span>
             <button class="deco" title="unequip"
                     th:attr="hx-post=@{/game/{id}/unequip/{slot}(id=${s.player.id},slot=${e.key})}"
                     hx-target="#screen" hx-swap="outerHTML">⤵️</button>
-            <span class="label" th:text="${e.key.name().toLowerCase()}">sword</span>
+            <span class="label" th:text="${e.key.perk()}">+1 attack vs players</span>
           </div>
         </div>
         <p class="muted" th:if="${s.player.equipment.isEmpty()}" style="font-size:13px; margin-top:8px;">
