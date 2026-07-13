@@ -16,21 +16,21 @@ class PresenceTrackerTest {
     private final UUID player = UUID.randomUUID();
 
     @Test
-    void aPlayerIdleBeyondThreeMinutesIsDueToFreeze() {
+    void aPlayerIdleBeyondTheIdleLimitIsDueToFreeze() {
         presence.touch(player);
-        clock.advance(Duration.ofMinutes(3).minusSeconds(1));
+        clock.advance(PresenceTracker.IDLE_LIMIT.minusSeconds(1));
         assertThat(presence.due()).doesNotContain(player);
 
-        clock.advance(Duration.ofSeconds(1)); // now exactly 3 minutes
+        clock.advance(Duration.ofSeconds(1)); // now exactly at the limit
         assertThat(presence.due()).contains(player);
     }
 
     @Test
     void activityResetsTheIdleClock() {
         presence.touch(player);
-        clock.advance(Duration.ofMinutes(2));
-        presence.touch(player);                 // still here
-        clock.advance(Duration.ofMinutes(2));   // 2 min since the last touch
+        clock.advance(PresenceTracker.IDLE_LIMIT.minusSeconds(1));
+        presence.touch(player);                                   // still here, just in time
+        clock.advance(PresenceTracker.IDLE_LIMIT.minusSeconds(1)); // clock restarted from the touch
         assertThat(presence.due()).doesNotContain(player);
     }
 
@@ -68,8 +68,19 @@ class PresenceTrackerTest {
     @Test
     void forgettingAPlayerClearsThem() {
         presence.touch(player);
-        clock.advance(Duration.ofMinutes(5));
+        clock.advance(PresenceTracker.IDLE_LIMIT.plusMinutes(1));
         presence.forget(player);
         assertThat(presence.due()).doesNotContain(player);
+    }
+
+    @Test
+    void secondsUntilIdleCountsDownFromTheLimitAndResetsOnActivity() {
+        presence.touch(player);
+        assertThat(presence.secondsUntilIdle(player)).isEqualTo(PresenceTracker.IDLE_LIMIT.getSeconds());
+        clock.advance(Duration.ofMinutes(4));
+        assertThat(presence.secondsUntilIdle(player))
+                .isEqualTo(PresenceTracker.IDLE_LIMIT.minusMinutes(4).getSeconds());
+        presence.touch(player);
+        assertThat(presence.secondsUntilIdle(player)).isEqualTo(PresenceTracker.IDLE_LIMIT.getSeconds());
     }
 }

@@ -446,10 +446,12 @@ public class GameService {
         String climbGear = gear.map(g -> g.emoji() + " " + g.displayName()).orElse(null);
         boolean readyToClimb = gear.map(g -> carries(player, g)).orElse(true);
 
-        return new GameSnapshot(player, Hearts.render(player.getHealth()), state, RingMath.squaresAt(pos.level()),
-                pos.level() < RingMath.SUMMIT_LEVEL, climbGear, readyToClimb, ground, others, roster.size(),
-                coordinator.hasVoted(pos.level(), pos.index(), playerId), recipes, selected,
-                tables, fight, message);
+        int idleSeconds = (int) presence.secondsUntilIdle(playerId);
+
+        return new GameSnapshot(player, Hearts.render(player.getHealth()), idleSeconds, state,
+                RingMath.squaresAt(pos.level()), pos.level() < RingMath.SUMMIT_LEVEL, climbGear, readyToClimb,
+                ground, others, roster.size(), coordinator.hasVoted(pos.level(), pos.index(), playerId),
+                recipes, selected, tables, fight, message);
     }
 
     /** The live recipe filter: recipes containing every selected ingredient type. */

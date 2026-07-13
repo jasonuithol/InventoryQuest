@@ -25,8 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class PresenceTracker implements ConnectionListener {
 
-    /** You may idle (no actions) for three minutes before you freeze. */
-    public static final Duration IDLE_LIMIT = Duration.ofMinutes(3);
+    /** You may idle (no actions) for ten minutes before you freeze. */
+    public static final Duration IDLE_LIMIT = Duration.ofMinutes(10);
     /** Grace after the last browser connection drops — long enough to survive a refresh. */
     public static final Duration DISCONNECT_GRACE = Duration.ofSeconds(20);
     /** Forfeit your move this many times in a row and you freeze. */
@@ -89,6 +89,14 @@ public class PresenceTracker implements ConnectionListener {
     /** A successful multiplayer move — the forfeit streak resets. */
     public synchronized void resetForfeits(UUID player) {
         presence(player).forfeitStreak = 0;
+    }
+
+    /** Seconds until this player would freeze from idling — for the UI countdown. */
+    public synchronized long secondsUntilIdle(UUID player) {
+        Presence p = presences.get(player);
+        Instant since = p == null ? clock.instant() : p.lastSeen;
+        long elapsed = Duration.between(since, clock.instant()).getSeconds();
+        return Math.max(0, IDLE_LIMIT.getSeconds() - elapsed);
     }
 
     /** Drop all tracking for a player (they froze / left for good). */

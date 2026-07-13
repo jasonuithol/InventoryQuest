@@ -84,8 +84,9 @@ to heal, capped at full, consuming the food.
 
 The mountain does not wait. A server-side reaper ticks every second and enforces:
 
-- **Idle limit — 3 minutes.** Do nothing (no action, no page load) for three
-  minutes and you freeze. Watching counts as idle.
+- **Idle limit — 10 minutes.** Do nothing (no action, no page load) for ten
+  minutes and you freeze. Watching counts as idle. The status strip shows a live
+  countdown (💤 m:ss) that any action resets.
 - **Disconnect.** If your browser drops the connection you lose your session and
   freeze — after a short grace (≈20s) so a refresh or a move between squares
   doesn't kill you.

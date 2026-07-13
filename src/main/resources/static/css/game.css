@@ -31,6 +31,10 @@ a { color: var(--accent); }
     font-size: 15px;
 }
 .strip .hearts { letter-spacing: 2px; }
+.strip .idle { font-size: 13px; opacity: .75; font-variant-numeric: tabular-nums; }
+.strip .idle b { font-weight: 600; }
+.strip .idle.warn { opacity: 1; color: var(--danger); }
+.strip .idle.warn b { font-weight: 700; }
 .badge {
     margin-left: auto; padding: 4px 12px; border-radius: 999px;
     font-weight: 600; font-size: 13px; letter-spacing: .5px;

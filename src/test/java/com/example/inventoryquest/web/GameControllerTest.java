@@ -43,7 +43,7 @@ class GameControllerTest {
     }
 
     private GameSnapshot idleSnapshot(Player player) {
-        return new GameSnapshot(player, "❤️❤️❤️❤️", GameState.IDLE, 256, true,
+        return new GameSnapshot(player, "❤️❤️❤️❤️", 600, GameState.IDLE, 256, true,
                 "🧥 snow jacket", false, List.of(), List.of(), 1, false, List.of(), Set.of(), List.of(), null, null);
     }
 

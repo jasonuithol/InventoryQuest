@@ -14,6 +14,7 @@ import java.util.UUID;
 public record GameSnapshot(
         Player player,
         String hearts,
+        int idleSeconds,         // seconds until an idle freeze — seeds the UI countdown
         GameState state,
         int squareCount,
         boolean canClimb,

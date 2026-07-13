@@ -63,12 +63,12 @@ class GameReaperTest {
     }
 
     @Test
-    void idlingThreeMinutesFreezesYouIntoACorpsicalAndDropsAShard() {
+    void idlingPastTheLimitFreezesYouIntoACorpsicalAndDropsAShard() {
         Player doomed = alive();
         when(players.require(id)).thenReturn(doomed);
         presence.touch(id);
 
-        clock.advance(Duration.ofMinutes(3));
+        clock.advance(PresenceTracker.IDLE_LIMIT);
         game.reap();
 
         assertThat(doomed.isAlive()).isFalse();

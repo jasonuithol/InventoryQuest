@@ -7,6 +7,22 @@
     <link rel="stylesheet" th:href="@{/css/game.css}">
     <script th:src="@{/webjars/htmx.org/dist/htmx.min.js}"></script>
     <script th:src="@{/webjars/htmx.org/dist/ext/ws.js}"></script>
+    <script>
+      // Live idle countdown. The status strip carries #idle-timer with data-remaining (seconds).
+      // This ticks it down once a second; every htmx swap re-renders the strip and reseeds it, so
+      // any action resets the clock. When it reaches zero the server has frozen you into a
+      // corpsical, and your context panel updates over the WebSocket.
+      setInterval(function () {
+        var el = document.getElementById('idle-timer');
+        if (!el) return;
+        var r = parseInt(el.getAttribute('data-remaining') || '0', 10);
+        if (r > 0) { r -= 1; el.setAttribute('data-remaining', String(r)); }
+        var m = Math.floor(r / 60), s = r % 60;
+        el.textContent = m + ':' + (s < 10 ? '0' + s : s);
+        var wrap = el.closest('.idle');
+        if (wrap) { wrap.classList.toggle('warn', r <= 30); }
+      }, 1000);
+    </script>
 </head>
 <body>
 
@@ -21,6 +37,9 @@
       <span class="crown" th:if="${s.squareCount == 1}" title="The summit — last square standing">👑 Summit</span>
       <span class="hearts" th:text="${s.hearts}">❤️❤️❤️❤️</span>
       <span class="muted" th:if="${s.occupantCount > 1}" th:text="'👥 ' + ${s.occupantCount} + ' here'">👥</span>
+      <span class="idle" th:unless="${s.state.name() == 'ELIMINATED'}"
+            title="You freeze if idle this long — any action resets it">
+        💤 <b id="idle-timer" th:attr="data-remaining=${s.idleSeconds}">10:00</b></span>
       <span class="badge" th:classappend="${s.state}" th:text="${s.state}">IDLE</span>
     </div>
 
