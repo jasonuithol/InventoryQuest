@@ -17,7 +17,5 @@ public enum GameState {
     /** Peace held and this player voted Leave: they must move before acting again. */
     MUST_MOVE,
     /** This player has been eliminated. */
-    ELIMINATED,
-    /** This player reached the summit — King of the Mountain. */
-    SUMMIT
+    ELIMINATED
 }

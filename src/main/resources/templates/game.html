@@ -18,6 +18,7 @@
     <!-- Status strip: elevation, health, state badge — always agrees with the panel -->
     <div class="strip">
       <span>⛰️ Level <b th:text="${s.player.level}">0</b> · <span th:text="${s.squareCount}">256</span> squares</span>
+      <span class="crown" th:if="${s.squareCount == 1}" title="The summit — last square standing">👑 Summit</span>
       <span class="hearts" th:text="${s.hearts}">❤️❤️❤️❤️</span>
       <span class="muted" th:if="${s.occupantCount > 1}" th:text="'👥 ' + ${s.occupantCount} + ' here'">👥</span>
       <span class="badge" th:classappend="${s.state}" th:text="${s.state}">IDLE</span>
@@ -205,11 +206,7 @@
             it ends the fight only if <em>every</em> opponent accepts.</p>
         </div>
 
-        <!-- SUMMIT / ELIMINATED -->
-        <div th:if="${s.state.name() == 'SUMMIT'}">
-          <h2>👑 King of the Mountain</h2>
-          <p>You reached the summit. The title is yours — until someone thinks they deserve it more.</p>
-        </div>
+        <!-- ELIMINATED -->
         <div th:if="${s.state.name() == 'ELIMINATED'}">
           <h2>👻 Eliminated</h2>
           <p class="muted">The mountain does not do refunds.</p>

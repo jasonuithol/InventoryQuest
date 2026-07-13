@@ -474,9 +474,8 @@ public class GameService {
         if (!player.isAlive()) {
             return GameState.ELIMINATED;
         }
-        if (player.position().isSummit()) {
-            return GameState.SUMMIT;
-        }
+        // The summit is just another square: voting, fights, trades, and ground pickup all work
+        // there. (Its ring holds a single square, so left/right wrap back and up is blocked.)
         Position pos = player.position();
         int rosterSize = players.inSquare(pos.level(), pos.index()).size();
         return coordinator.stateFor(pos.level(), pos.index(), player.getId(), rosterSize);
