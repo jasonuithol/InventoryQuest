@@ -24,7 +24,8 @@ IMAGE_REF="${IMAGE_REF:-ghcr.io/jasonuithol/inventoryquest:latest}"
 POD="${POD:-iq-pod}"
 PG_VOLUME="${PG_VOLUME:-iq-pgdata}"
 APP_PORT="${APP_PORT:-8080}"
-OPEN_FIREWALL="${OPEN_FIREWALL:-yes}"   # open APP_PORT in ufw if ufw is active
+OPEN_FIREWALL="${OPEN_FIREWALL:-yes}"        # open APP_PORT in ufw if ufw is active
+COPY_ROOT_SSH_KEY="${COPY_ROOT_SSH_KEY:-yes}"  # let you `ssh deploy@…` with root's key
 
 # ── Preconditions ──────────────────────────────────────────────────────────
 if [[ $EUID -ne 0 ]]; then
@@ -73,6 +74,35 @@ if [[ ! -d "${RUNTIME_DIR}" ]]; then
   echo "   ${RUNTIME_DIR} not present yet — starting user@${DEPLOY_UID}.service manually…"
   systemctl start "user@${DEPLOY_UID}.service" || true
   sleep 2
+fi
+
+# ── Let you SSH straight in as the deploy user ──────────────────────────────
+# A real SSH login gets a logind session (XDG_RUNTIME_DIR set, socket working),
+# so `ssh deploy@…` needs no env wrangling and no machinectl. Authorize the same
+# key you use for root. The account has no password, so key auth is the only way in.
+if [[ "${COPY_ROOT_SSH_KEY}" == "yes" ]]; then
+  if [[ -s /root/.ssh/authorized_keys ]]; then
+    echo "==> Authorizing root's SSH key(s) for '${DEPLOY_USER}'…"
+    install -d -m700 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" "${DEPLOY_HOME}/.ssh"
+    touch "${DEPLOY_HOME}/.ssh/authorized_keys"
+    # merge + de-dupe so re-runs don't pile up duplicate keys (sort allows -o == input)
+    sort -u /root/.ssh/authorized_keys "${DEPLOY_HOME}/.ssh/authorized_keys" \
+      -o "${DEPLOY_HOME}/.ssh/authorized_keys"
+    chown "${DEPLOY_USER}:${DEPLOY_USER}" "${DEPLOY_HOME}/.ssh/authorized_keys"
+    chmod 600 "${DEPLOY_HOME}/.ssh/authorized_keys"
+    echo "    You can now:  ssh ${DEPLOY_USER}@<this-vps-ip>"
+  else
+    echo "==> No /root/.ssh/authorized_keys found (root may be password-only) — skipping."
+    echo "    To enable 'ssh ${DEPLOY_USER}@…', add your public key to ${DEPLOY_HOME}/.ssh/authorized_keys."
+  fi
+fi
+
+# Belt-and-suspenders: set the runtime dir for non-login shells too, so `su - deploy`
+# and `sudo -iu deploy` can drive Podman even without a full logind session.
+DEPLOY_BASHRC="${DEPLOY_HOME}/.bashrc"
+if ! grep -q 'XDG_RUNTIME_DIR=/run/user' "${DEPLOY_BASHRC}" 2>/dev/null; then
+  printf '\n# rootless Podman: ensure the runtime dir is set for non-login shells\nexport XDG_RUNTIME_DIR="/run/user/$(id -u)"\n' >> "${DEPLOY_BASHRC}"
+  chown "${DEPLOY_USER}:${DEPLOY_USER}" "${DEPLOY_BASHRC}"
 fi
 
 # Run a command AS the deploy user with a working rootless environment.
@@ -193,8 +223,8 @@ echo "════════════════════════�
 echo "  InventoryQuest is up on  http://<this-vps-ip>:${APP_PORT}"
 echo "  Quadlet-managed, auto-starts on boot, auto-updates from GHCR."
 echo
-echo "  Manage it as the deploy user (proper rootless session):"
-echo "    machinectl shell ${DEPLOY_USER}@"
+echo "  Manage it as the deploy user (a real login = working rootless session):"
+echo "    ssh ${DEPLOY_USER}@<this-vps-ip>"
 echo "    systemctl --user status ${POD}-app.service"
 echo "    podman pod ps  &&  podman logs -f ${POD}-app"
 echo
