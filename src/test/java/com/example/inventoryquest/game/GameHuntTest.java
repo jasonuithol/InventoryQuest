@@ -3,7 +3,9 @@ package com.example.inventoryquest.game;
 import com.example.inventoryquest.crafting.CraftingService;
 import com.example.inventoryquest.crafting.RecipeBook;
 import com.example.inventoryquest.inventory.Backpack;
+import com.example.inventoryquest.inventory.EquippedItem;
 import com.example.inventoryquest.inventory.InventoryService;
+import com.example.inventoryquest.inventory.PlacedItem;
 import com.example.inventoryquest.item.EquipSlot;
 import com.example.inventoryquest.item.ItemType;
 import com.example.inventoryquest.mountain.MountainService;
@@ -21,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -122,5 +125,30 @@ class GameHuntTest {
 
         assertThatThrownBy(() -> game.hunt(id))
                 .isInstanceOf(GameException.class).hasMessageContaining("can't hunt");
+    }
+
+    @Test
+    void anAmuletSharpensYourSwingAgainstMonsters() {
+        Player p = player(16);
+        p.getEquipment().put(EquipSlot.AMULET, EquippedItem.from(PlacedItem.of(ItemType.AMULET, 0, 0)));
+        idle(p);
+        when(monsters.hunt(anyInt(), anyInt(), anyInt()))
+                .thenReturn(new MonsterService.HuntOutcome(true, true, false, null, 4, 6, false, 0, "yeti", "🧟"));
+
+        game.hunt(id);
+
+        verify(monsters).hunt(anyInt(), anyInt(), eq(2)); // bare hands 1 + amulet 1
+    }
+
+    @Test
+    void aShieldSoftensTheMonstersBite() {
+        Player p = player(16);
+        p.getEquipment().put(EquipSlot.SHIELD, EquippedItem.from(PlacedItem.of(ItemType.TOWER_SHIELD, 0, 0)));
+        idle(p);
+        when(monsters.hunt(anyInt(), anyInt(), anyInt())).thenReturn(hitsBackFor(3));
+
+        game.hunt(id);
+
+        assertThat(p.getHealth()).isEqualTo(16 - 2); // 3 bite − 1 shield
     }
 }

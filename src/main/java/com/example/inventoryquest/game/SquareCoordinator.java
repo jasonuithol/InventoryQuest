@@ -110,7 +110,8 @@ public class SquareCoordinator {
 
     /** A player has entered the square. Applies the readme's arrival rules. */
     public void onArrival(int level, int index, UUID arriving, Set<UUID> rosterAfter,
-                          Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer) {
+                          Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer,
+                          Map<UUID, Integer> protectionByPlayer) {
         Square sq = square(level, index);
         synchronized (sq) {
             if (sq.trade != null) {
@@ -123,7 +124,8 @@ public class SquareCoordinator {
             if (sq.fighting()) {
                 // arrival during a fight joins the ongoing fight (and calls off any parley)
                 sq.fight.join(arriving, healthByPlayer.getOrDefault(arriving, 1),
-                        damageByPlayer.getOrDefault(arriving, CombatService.UNARMED_DAMAGE));
+                        damageByPlayer.getOrDefault(arriving, CombatService.UNARMED_DAMAGE),
+                        protectionByPlayer.getOrDefault(arriving, 0));
                 armTurn(sq);
             } else if (rosterAfter.size() <= 1) {
                 sq.clear(); // back to solo
@@ -170,7 +172,8 @@ public class SquareCoordinator {
 
     /** Cast a vote; if the round completes, route the square into fight / trade / must-move. */
     public Optional<VoteResolution> castVote(int level, int index, UUID player, VoteOption option,
-                                             Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer) {
+                                             Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer,
+                                             Map<UUID, Integer> protectionByPlayer) {
         Square sq = square(level, index);
         Optional<VoteResolution> resolved;
         synchronized (sq) {
@@ -180,23 +183,26 @@ public class SquareCoordinator {
             }
             sq.vote.cast(player, option);
             resolved = sq.vote.resolve();
-            resolved.ifPresent(res -> applyResolution(sq, res, healthByPlayer, damageByPlayer));
+            resolved.ifPresent(res -> applyResolution(sq, res, healthByPlayer, damageByPlayer, protectionByPlayer));
         }
         broadcaster.broadcastSquare(level, index);
         return resolved;
     }
 
     private void applyResolution(Square sq, VoteResolution res,
-                                 Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer) {
+                                 Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer,
+                                 Map<UUID, Integer> protectionByPlayer) {
         sq.resolution = res;
         if (res.isFight()) {
             Map<UUID, Integer> health = new LinkedHashMap<>();
             Map<UUID, Integer> damage = new LinkedHashMap<>();
+            Map<UUID, Integer> protection = new LinkedHashMap<>();
             res.fighters().forEach(f -> {
                 health.put(f, healthByPlayer.getOrDefault(f, 1));
                 damage.put(f, damageByPlayer.getOrDefault(f, CombatService.UNARMED_DAMAGE));
+                protection.put(f, protectionByPlayer.getOrDefault(f, 0));
             });
-            sq.fight = combatService.begin(health, damage);
+            sq.fight = combatService.begin(health, damage, protection);
             armTurn(sq);
         } else {
             sq.mustMove.clear();
@@ -297,7 +303,7 @@ public class SquareCoordinator {
                     continue; // everyone voted; resolution is handled on the voting path
                 }
                 nonVoters.forEach(nv -> sq.vote.cast(nv, VoteOption.LEAVE));
-                sq.vote.resolve().ifPresent(r -> applyResolution(sq, r, Map.of(), Map.of()));
+                sq.vote.resolve().ifPresent(r -> applyResolution(sq, r, Map.of(), Map.of(), Map.of()));
                 nonVoters.forEach(nv -> timeouts.add(new Timeout(sq.level, sq.index, nv)));
                 touched.add(sq);
             }

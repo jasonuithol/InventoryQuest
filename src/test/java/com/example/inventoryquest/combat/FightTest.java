@@ -33,7 +33,12 @@ class FightTest {
     };
 
     private Fight fight(RandomGenerator rng, Map<UUID, Integer> health, Map<UUID, Integer> damage) {
-        return new Fight(health, damage, rng, 0.75, CombatService.UNARMED_DAMAGE);
+        return new Fight(health, damage, Map.of(), rng, 0.75, CombatService.UNARMED_DAMAGE);
+    }
+
+    private Fight fight(RandomGenerator rng, Map<UUID, Integer> health, Map<UUID, Integer> damage,
+                        Map<UUID, Integer> protection) {
+        return new Fight(health, damage, protection, rng, 0.75, CombatService.UNARMED_DAMAGE);
     }
 
     private static Map<UUID, Integer> map(Object... kv) {
@@ -149,6 +154,24 @@ class FightTest {
                 .isInstanceOf(CombatException.class).hasMessageContaining("parley");
     }
 
+    // ── Protection (shield) ────────────────────────────────────────────────────────────
+
+    @Test
+    void aShieldSubtractsItsProtectionFromEveryHit() {
+        // a swings a sword (5); b holds a shield worth 1 protection
+        Fight f = fight(ALWAYS_HIT, map(a, 16, b, 16), map(a, 5, b, 5), map(b, 1));
+        f.attack(a, b);
+        assertThat(f.healthOf(b)).isEqualTo(16 - 4); // 5 − 1
+    }
+
+    @Test
+    void enoughProtectionFullyAbsorbsAWeakHit() {
+        // both bare-handed (1 damage); b's shield (1) turns the blow entirely
+        Fight f = fight(ALWAYS_HIT, map(a, 16, b, 16), map(a, 1, b, 1), map(b, 1));
+        f.attack(a, b);
+        assertThat(f.healthOf(b)).isEqualTo(16); // untouched
+    }
+
     // ── Forfeits ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -180,7 +203,7 @@ class FightTest {
     void joiningMidFightCallsOffAnyParleyAndAddsACombatant() {
         Fight f = fight(ALWAYS_HIT, map(a, 16, b, 16), map(a, 2, b, 5));
         f.callParley(a);
-        f.join(c, 16, 5);
+        f.join(c, 16, 5, 0);
 
         assertThat(f.parleyPending()).isFalse();
         assertThat(f.combatants()).contains(c);

@@ -142,7 +142,9 @@ placed items return to their owners and the square votes again.
   absolutely regret picking up on level 0; 🧱 iron bar and 🪵 wood are 2×2).
 - Items on the ground can only be picked up **if they fit** in your backpack.
 - Items come in a few kinds:
-  - usable **artifacts** (sword, shield, ring, amulet);
+  - usable **artifacts** — a ⚔️ sword/🗡️ dagger for attack damage, and worn gear
+    with combat perks: 💍 ring (+1 attack vs other players), 📿 amulet (+1 attack
+    vs monsters), 🛡️ shield (−1 damage on every hit taken, from players or monsters);
   - **crafting ingredients** (🧱 iron bar, 💎 jewel, 🪵 wood, 🧵 leather) that
     **combine** into artifacts;
   - **food** (🍎 apple, 🍞 bread, 🍖 meat) — eaten to restore hit-points;
@@ -392,7 +394,7 @@ can trigger a four-square merge, a vote, and a trade table without recruiting
 - [ ] Spectator mode for eliminated players (haunt your killer's inventory decisions)
 - [ ] Item rarity tiers & recipe discovery
 - [ ] Seasonal mountains (fresh 256-player ladders)
-- [ ] Combat depth: shields, ring/amulet passives actually doing things
+- [x] Combat depth: shields, ring/amulet passives actually doing things
 
 ## License & credits
 

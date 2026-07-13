@@ -92,7 +92,7 @@ public class GameService {
         announceArrival(bot);
         if (vote != null) {
             Position pos = bot.position();
-            coordinator.castVote(level, index, bot.getId(), vote, healthByPlayer(pos), attackDamageByPlayer(pos));
+            coordinator.castVote(level, index, bot.getId(), vote, healthByPlayer(pos), attackDamageByPlayer(pos), protectionByPlayer(pos));
         }
         return bot;
     }
@@ -252,7 +252,7 @@ public class GameService {
         Player player = players.require(playerId);
         Position pos = player.position();
         coordinator.castVote(pos.level(), pos.index(), playerId, option,
-                healthByPlayer(pos), attackDamageByPlayer(pos));
+                healthByPlayer(pos), attackDamageByPlayer(pos), protectionByPlayer(pos));
         presence.resetForfeits(playerId); // a move made in time
     }
 
@@ -359,7 +359,7 @@ public class GameService {
             throw new GameException("You can't hunt while " + state.name().toLowerCase().replace('_', ' '));
         }
         Position pos = player.position();
-        MonsterService.HuntOutcome o = monsters.hunt(pos.level(), pos.index(), attackDamage(player));
+        MonsterService.HuntOutcome o = monsters.hunt(pos.level(), pos.index(), attackVsMonsters(player));
         if (!o.encountered()) {
             throw new GameException("There is nothing here to hunt");
         }
@@ -373,15 +373,17 @@ public class GameService {
             String swing = o.playerHit()
                     ? "You strike the " + o.monsterName() + " (" + o.monsterHpAfter() + "/" + o.maxHp() + " HP left). "
                     : "You swing at the " + o.monsterName() + " and miss. ";
-            if (o.monsterHit()) {
-                int remaining = player.getHealth() - o.playerDamage();
-                if (remaining <= 0) {
-                    becomeCorpsical(playerId, "slain by a " + o.monsterName());
-                    return "💀 The " + o.monsterName() + " cuts you down — you freeze where you fall.";
-                }
-                player.setHealth(remaining);
+            int taken = o.monsterHit() ? Math.max(0, o.playerDamage() - protection(player)) : 0;
+            if (taken >= player.getHealth()) {
+                becomeCorpsical(playerId, "slain by a " + o.monsterName());
+                return "💀 The " + o.monsterName() + " cuts you down — you freeze where you fall.";
+            }
+            if (taken > 0) {
+                player.setHealth(player.getHealth() - taken);
                 players.save(player);
-                message = swing + "It hits back for " + o.playerDamage() + " HP!";
+                message = swing + "It hits back for " + taken + " HP!";
+            } else if (o.monsterHit()) {
+                message = swing + "It hits back — your 🛡️ shield turns the blow.";
             } else {
                 message = swing + "It lunges back and misses.";
             }
@@ -597,7 +599,7 @@ public class GameService {
     private void announceArrival(Player player) {
         Position pos = player.position();
         coordinator.onArrival(pos.level(), pos.index(), player.getId(),
-                rosterIds(pos, null), healthByPlayer(pos), attackDamageByPlayer(pos));
+                rosterIds(pos, null), healthByPlayer(pos), attackDamageByPlayer(pos), protectionByPlayer(pos));
     }
 
     /** Alive player ids in a square, optionally excluding one (e.g. a player who just left). */
@@ -614,16 +616,45 @@ public class GameService {
         return health;
     }
 
-    /** Each player's attack damage, from their equipped weapon (or bare hands). */
+    // ── Equipment combat bonuses ───────────────────────────────────────────────────────
+    private static final int RING_ATTACK_VS_PLAYERS = 1;    // 💍 sharper against other climbers
+    private static final int AMULET_ATTACK_VS_MONSTERS = 1; // 📿 sharper against monsters
+    private static final int SHIELD_PROTECTION = 1;         // 🛡️ softens every hit taken
+
+    /** Each player's attack damage against <em>other players</em> (weapon + ring). */
     private Map<UUID, Integer> attackDamageByPlayer(Position pos) {
         Map<UUID, Integer> damage = new LinkedHashMap<>();
-        players.inSquare(pos.level(), pos.index()).forEach(p -> damage.put(p.getId(), attackDamage(p)));
+        players.inSquare(pos.level(), pos.index()).forEach(p -> damage.put(p.getId(), attackVsPlayers(p)));
         return damage;
     }
 
-    private int attackDamage(Player player) {
+    /** Each player's damage reduction on every hit taken (shield). */
+    private Map<UUID, Integer> protectionByPlayer(Position pos) {
+        Map<UUID, Integer> protection = new LinkedHashMap<>();
+        players.inSquare(pos.level(), pos.index()).forEach(p -> protection.put(p.getId(), protection(p)));
+        return protection;
+    }
+
+    /** Base weapon damage from the equipped sword-slot weapon, or bare hands. */
+    private int weaponDamage(Player player) {
         EquippedItem weapon = player.getEquipment().get(EquipSlot.SWORD);
         return weapon != null ? weapon.type().damage() : CombatService.UNARMED_DAMAGE;
+    }
+
+    private boolean wearing(Player player, EquipSlot slot) {
+        return player.getEquipment().get(slot) != null;
+    }
+
+    private int attackVsPlayers(Player player) {
+        return weaponDamage(player) + (wearing(player, EquipSlot.RING) ? RING_ATTACK_VS_PLAYERS : 0);
+    }
+
+    private int attackVsMonsters(Player player) {
+        return weaponDamage(player) + (wearing(player, EquipSlot.AMULET) ? AMULET_ATTACK_VS_MONSTERS : 0);
+    }
+
+    private int protection(Player player) {
+        return wearing(player, EquipSlot.SHIELD) ? SHIELD_PROTECTION : 0;
     }
 
     /** Is the player carrying an item of this type in their backpack? */

@@ -39,6 +39,8 @@ public class Fight {
     private final LinkedHashMap<UUID, Integer> health = new LinkedHashMap<>();
     /** Fighter → weapon attack damage. Retains entries for fighters who have left, harmlessly. */
     private final Map<UUID, Integer> damage = new LinkedHashMap<>();
+    /** Fighter → damage subtracted from every hit they take (a shield). */
+    private final Map<UUID, Integer> protection = new LinkedHashMap<>();
     /** Every fighter ever in this fight, for stable cyclic turn advancement (append-only). */
     private final List<UUID> order = new ArrayList<>();
 
@@ -57,7 +59,7 @@ public class Fight {
         }
     }
 
-    public Fight(Map<UUID, Integer> health, Map<UUID, Integer> damage,
+    public Fight(Map<UUID, Integer> health, Map<UUID, Integer> damage, Map<UUID, Integer> protection,
                  RandomGenerator rng, double hitChance, int unarmedDamage) {
         this.rng = rng;
         this.hitChance = hitChance;
@@ -67,6 +69,7 @@ public class Fight {
             this.order.add(id);
         });
         this.damage.putAll(damage);
+        this.protection.putAll(protection);
         this.current = order.isEmpty() ? null : order.get(0);
     }
 
@@ -91,7 +94,8 @@ public class Fight {
         int dealt = 0;
         boolean eliminated = false;
         if (hit) {
-            dealt = damage.getOrDefault(attacker, unarmedDamage);
+            int raw = damage.getOrDefault(attacker, unarmedDamage);
+            dealt = Math.max(0, raw - protection.getOrDefault(target, 0)); // the target's shield
             int hp = health.get(target) - dealt;
             if (hp <= 0) {
                 health.remove(target);
@@ -172,13 +176,14 @@ public class Fight {
     // ── Membership changes ─────────────────────────────────────────────────────────────
 
     /** A player entering the square joins the ongoing fight; any pending parley is called off. */
-    public void join(UUID id, int hp, int weaponDamage) {
+    public void join(UUID id, int hp, int weaponDamage, int prot) {
         parley = null;                       // a new arrival changes everything — talks are off
         if (health.containsKey(id)) {
             return;
         }
         health.put(id, hp);
         damage.put(id, weaponDamage);
+        protection.put(id, prot);
         if (!order.contains(id)) {
             order.add(id);
         }

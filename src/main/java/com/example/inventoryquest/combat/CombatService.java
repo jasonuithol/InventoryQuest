@@ -28,10 +28,11 @@ public class CombatService {
     /**
      * Begin a fight.
      *
-     * @param health per-combatant hit-points
-     * @param damage per-combatant attack damage (from their equipped weapon)
+     * @param health     per-combatant hit-points
+     * @param damage     per-combatant attack damage (equipped weapon, plus a ring's edge)
+     * @param protection per-combatant damage reduction on every hit taken (a shield)
      */
-    public Fight begin(Map<UUID, Integer> health, Map<UUID, Integer> damage) {
-        return new Fight(health, damage, rng, HIT_CHANCE, UNARMED_DAMAGE);
+    public Fight begin(Map<UUID, Integer> health, Map<UUID, Integer> damage, Map<UUID, Integer> protection) {
+        return new Fight(health, damage, protection, rng, HIT_CHANCE, UNARMED_DAMAGE);
     }
 }
