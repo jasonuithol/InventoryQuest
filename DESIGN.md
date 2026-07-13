@@ -142,7 +142,8 @@ placed items return to their owners and the square votes again.
   - **mountaineering gear** (🧥 snow jacket, 🥾 cleats, ⛏️ ice pick, 🫁 oxygen
     tank) — required to climb (see below);
   - **relics** — a 🧊 shard of corpsical, dropped where a player froze.
-- Four **equipment slots** sit outside the backpack: sword, shield, ring, amulet.
+- **Equipment slots** sit outside the backpack: sword, shield, ring, amulet, plus
+  one for each piece of mountaineering gear (jacket, boots, pick, tank).
 
 **Actions:** select item(s) · combine · equip · drop · eat · move up/left/right ·
 (when others are present) vote **Fight / Trade / Leave**, and in a fight
@@ -150,8 +151,9 @@ placed items return to their owners and the square votes again.
 
 ### Climbing gear — every level demands its own
 
-Each ascent is gated on **carrying that level's gear** in your backpack — not
-worn, *carried*, so it competes with loot and ingredients for space:
+Each ascent is gated on **having that level's gear** — either **worn** in its own
+equipment slot or carried in the backpack. Wearing it keeps the pack free; carrying
+it costs space you may want for loot:
 
 | Climb from | Requires | Crafted from (monster drop + a raw material) |
 |---|---|---|
@@ -164,10 +166,11 @@ The gear is **not lying around** — it must be **crafted** from the level's mon
 drop plus a raw material (the drop alone won't do). In fact **nothing craftable is
 ever found on the ground**: no weapons, no armour, no gear — only their raw
 ingredients spawn, and the drop comes solely from the level's roaming monster. So each ascent is a
-little quest: hunt the beast, take its drop, craft the kit, and *then* climb —
-all while the 🫁 oxygen tank alone eats nine cells of a thirty-cell pack. The
-mountain makes you choose between hoarding and ascending. You keep the gear as you
-climb; a full summit run means hauling all four pieces if you want to keep them.
+little quest: hunt the beast, take its drop, craft the kit, and *then* climb.
+Once made, each piece can be **worn** in its own slot — so a full summit run wears
+all four rather than filling four chunks of pack (the 🫁 oxygen tank alone is nine
+cells). Leave it in the backpack and it competes with loot; wear it and the pack
+stays free. You keep the gear as you climb.
 
 ### Monsters — one per level, each guarding the way up
 

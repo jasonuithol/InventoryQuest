@@ -102,7 +102,7 @@
                     hx-target="#screen" hx-swap="outerHTML">➡️ Right</button>
           </div>
           <p class="hint" th:if="${s.canClimb and !s.readyToClimb}">
-            🏔️ To climb higher you must be carrying <b th:text="${s.climbGear}">🧥 snow jacket</b>.</p>
+            🏔️ To climb higher you must wear or carry <b th:text="${s.climbGear}">🧥 snow jacket</b>.</p>
           <p class="hint" th:if="${s.canClimb and s.readyToClimb and s.climbGear != null}">
             ✅ Geared up with <span th:text="${s.climbGear}">🧥 snow jacket</span> — you can climb.</p>
 

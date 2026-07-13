@@ -19,11 +19,11 @@ public enum ItemType {
     BREAD("🍞", 1, ItemKind.FOOD, null, 0, 6),
     MEAT("🍖", 2, ItemKind.FOOD, null, 0, 10),
 
-    // ── Climbing gear (must be carried to ascend to the next level) ────────────────
-    SNOW_JACKET("🧥", 2, ItemKind.GEAR, null, 0, 0),
-    CLEATS("🥾", 1, ItemKind.GEAR, null, 0, 0),
-    ICE_PICK("⛏️", 2, ItemKind.GEAR, null, 0, 0),
-    OXYGEN_TANK("🫁", 3, ItemKind.GEAR, null, 0, 0),
+    // ── Climbing gear (equip into its slot, or carry it, to ascend to the next level) ──
+    SNOW_JACKET("🧥", 2, ItemKind.GEAR, EquipSlot.JACKET, 0, 0),
+    CLEATS("🥾", 1, ItemKind.GEAR, EquipSlot.BOOTS, 0, 0),
+    ICE_PICK("⛏️", 2, ItemKind.GEAR, EquipSlot.PICK, 0, 0),
+    OXYGEN_TANK("🫁", 3, ItemKind.GEAR, EquipSlot.TANK, 0, 0),
 
     // ── Artifacts (equippable). Weapons carry attack damage in hit-points ──────────
     DAGGER("🗡️", 1, ItemKind.ARTIFACT, EquipSlot.SWORD, 2, 0),   // 2 HP — half a heart

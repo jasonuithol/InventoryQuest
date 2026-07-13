@@ -3,6 +3,7 @@ package com.example.inventoryquest.game;
 import com.example.inventoryquest.crafting.CraftingService;
 import com.example.inventoryquest.crafting.RecipeBook;
 import com.example.inventoryquest.inventory.Backpack;
+import com.example.inventoryquest.inventory.EquippedItem;
 import com.example.inventoryquest.inventory.InventoryService;
 import com.example.inventoryquest.inventory.PlacedItem;
 import com.example.inventoryquest.item.EquipSlot;
@@ -70,6 +71,19 @@ class GameMoveTest {
         Backpack pack = Backpack.empty(5, 6)
                 .place(PlacedItem.of(ItemType.SNOW_JACKET, 0, 0)).orElseThrow();
         Player climber = playerAtBase(pack);
+        wire(climber);
+
+        game.move(climber.getId(), Direction.UP);
+
+        assertThat(climber.getLevel()).isEqualTo(1);
+    }
+
+    @Test
+    void climbingWithTheGearWornSucceeds() {
+        Player climber = playerAtBase(Backpack.empty(5, 6)); // empty pack — the jacket is on their back
+        EnumMap<EquipSlot, EquippedItem> worn = new EnumMap<>(EquipSlot.class);
+        worn.put(EquipSlot.JACKET, EquippedItem.from(PlacedItem.of(ItemType.SNOW_JACKET, 0, 0)));
+        climber.setEquipment(worn);
         wire(climber);
 
         game.move(climber.getId(), Direction.UP);

@@ -112,9 +112,9 @@ public class GameService {
         }
         if (direction == Direction.UP) {
             ClimbGear.requiredToLeave(from.level()).ifPresent(gear -> {
-                if (!carries(player, gear)) {
+                if (!hasGear(player, gear)) {
                     throw new GameException("You need " + gear.emoji() + " " + gear.displayName()
-                            + " in your backpack to climb from here");
+                            + " (worn or carried) to climb from here");
                 }
             });
         }
@@ -492,7 +492,7 @@ public class GameService {
 
         Optional<ItemType> gear = ClimbGear.requiredToLeave(pos.level());
         String climbGear = gear.map(g -> g.emoji() + " " + g.displayName()).orElse(null);
-        boolean readyToClimb = gear.map(g -> carries(player, g)).orElse(true);
+        boolean readyToClimb = gear.map(g -> hasGear(player, g)).orElse(true);
 
         int idleSeconds = (int) presence.secondsUntilIdle(playerId);
 
@@ -624,5 +624,11 @@ public class GameService {
     /** Is the player carrying an item of this type in their backpack? */
     private boolean carries(Player player, ItemType type) {
         return player.getBackpack().items().stream().anyMatch(i -> i.type() == type);
+    }
+
+    /** Does the player have this gear at all — carried in the backpack, or worn in its slot? */
+    private boolean hasGear(Player player, ItemType type) {
+        return carries(player, type)
+                || player.getEquipment().values().stream().anyMatch(e -> e.type() == type);
     }
 }
