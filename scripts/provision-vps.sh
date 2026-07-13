@@ -69,12 +69,15 @@ if [[ ! -d "${RUNTIME_DIR}" ]]; then
 fi
 
 # Run a command AS the deploy user with a working rootless environment.
-# (`sudo -u` alone doesn't set XDG_RUNTIME_DIR / the user bus, which breaks the socket.)
+# Two footguns handled here:
+#   - `sudo -u` alone doesn't set XDG_RUNTIME_DIR / the user bus, which breaks the socket.
+#   - `sudo` keeps root's CWD (/root, mode 700); the deploy user can't chdir there and
+#     rootless Podman fails with "cannot chdir to /root". So start from the deploy home.
 as_deploy() {
   sudo -u "${DEPLOY_USER}" \
     XDG_RUNTIME_DIR="${RUNTIME_DIR}" \
     DBUS_SESSION_BUS_ADDRESS="unix:path=${RUNTIME_DIR}/bus" \
-    bash -lc "$*"
+    bash -lc "cd \"\$HOME\" 2>/dev/null || cd /; $*"
 }
 
 echo "==> Applying the subuid ranges to Podman storage…"
