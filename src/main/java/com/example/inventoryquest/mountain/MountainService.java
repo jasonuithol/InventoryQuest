@@ -18,12 +18,22 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class MountainService {
 
-    /** What the mountain scatters into a freshly entered square. */
+    /**
+     * What the mountain scatters into a freshly entered square. Only <strong>raw</strong> items —
+     * crafting ingredients and food — appear here: nothing craftable (no weapons, armour, or
+     * climbing gear) is ever just found lying around; those must be made from these. (The
+     * {@code spawnTableHasNothingCraftable} test enforces the rule.)
+     */
     private static final ItemType[] SPAWN_TABLE = {
             ItemType.IRON_BAR, ItemType.IRON_BAR, ItemType.WOOD,
-            ItemType.JEWEL, ItemType.LEATHER, ItemType.DAGGER,
+            ItemType.JEWEL, ItemType.LEATHER,
             ItemType.APPLE, ItemType.BREAD, ItemType.MEAT
     };
+
+    /** The raw items the mountain can scatter — exposed so tests can assert none is craftable. */
+    public static List<ItemType> spawnTable() {
+        return List.of(SPAWN_TABLE);
+    }
 
     private final SquareItemRepository items;
 

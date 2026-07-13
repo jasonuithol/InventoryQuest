@@ -153,15 +153,17 @@ placed items return to their owners and the square votes again.
 Each ascent is gated on **carrying that level's gear** in your backpack — not
 worn, *carried*, so it competes with loot and ingredients for space:
 
-| Climb from | Requires | Crafted from (this level's monster drop) |
+| Climb from | Requires | Crafted from (monster drop + a raw material) |
 |---|---|---|
-| Level 0 → 1 | 🧥 snow jacket (2×2) | 🧶 yeti pelt |
-| Level 1 → 2 | 🥾 cleats (1×1) | 🦷 wolf teeth |
-| Level 2 → 3 | ⛏️ ice pick (2×2) | 🪄 evil wizard's staff |
-| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) | 🥽 alien space suit |
+| Level 0 → 1 | 🧥 snow jacket (2×2) | 🧶 yeti pelt + 🧵 leather |
+| Level 1 → 2 | 🥾 cleats (1×1) | 🦷 wolf teeth + 🧵 leather |
+| Level 2 → 3 | ⛏️ ice pick (2×2) | 🪄 wizard's staff + 🪵 wood |
+| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) | 🥽 alien suit + 🧱 iron bar |
 
-The gear is **not lying around** — it must be **crafted**, and the only source of
-its ingredient is the level's roaming monster (see below). So each ascent is a
+The gear is **not lying around** — it must be **crafted** from the level's monster
+drop plus a raw material (the drop alone won't do). In fact **nothing craftable is
+ever found on the ground**: no weapons, no armour, no gear — only their raw
+ingredients spawn, and the drop comes solely from the level's roaming monster. So each ascent is a
 little quest: hunt the beast, take its drop, craft the kit, and *then* climb —
 all while the 🫁 oxygen tank alone eats nine cells of a thirty-cell pack. The
 mountain makes you choose between hoarding and ascending. You keep the gear as you
