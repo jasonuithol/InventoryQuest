@@ -103,7 +103,9 @@ public class GameService {
     public Player move(UUID playerId, Direction direction) {
         Player player = players.require(playerId);
         GameState state = stateFor(player);
-        if (state != GameState.IDLE && state != GameState.MUST_MOVE) {
+        // Voting and fighting pin you in place; idling, being told to leave, and trading do not —
+        // you can always walk away from a trade (the square tidies the tables up behind you).
+        if (state != GameState.IDLE && state != GameState.MUST_MOVE && state != GameState.TRADING) {
             throw new GameException("You can't move while " + state.name().toLowerCase().replace('_', ' '));
         }
         Position from = player.position();

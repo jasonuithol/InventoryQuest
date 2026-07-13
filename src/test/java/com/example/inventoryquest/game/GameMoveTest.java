@@ -104,6 +104,29 @@ class GameMoveTest {
     }
 
     @Test
+    void youCanWalkAwayFromATrade() {
+        Player trader = playerAtBase(Backpack.empty(5, 6));
+        when(players.require(trader.getId())).thenReturn(trader);
+        when(players.inSquare(anyInt(), anyInt())).thenReturn(List.of(trader));
+        when(coordinator.stateFor(anyInt(), anyInt(), any(), anyInt())).thenReturn(GameState.TRADING);
+
+        game.move(trader.getId(), Direction.RIGHT); // not stuck at the table
+
+        assertThat(trader.getSquareIndex()).isEqualTo(6);
+    }
+
+    @Test
+    void votingAndFightingStillPinYouInPlace() {
+        Player p = playerAtBase(Backpack.empty(5, 6));
+        when(players.require(p.getId())).thenReturn(p);
+        when(players.inSquare(anyInt(), anyInt())).thenReturn(List.of(p));
+        when(coordinator.stateFor(anyInt(), anyInt(), any(), anyInt())).thenReturn(GameState.FIGHTING);
+
+        assertThatThrownBy(() -> game.move(p.getId(), Direction.RIGHT))
+                .isInstanceOf(GameException.class).hasMessageContaining("can't move");
+    }
+
+    @Test
     void movingSidewaysNeverNeedsGear() {
         Player climber = playerAtBase(Backpack.empty(5, 6)); // empty pack
         wire(climber);

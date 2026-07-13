@@ -149,6 +149,16 @@ public class SquareCoordinator {
                     concludeFight(sq);
                 }
             }
+            if (sq.trade != null) {
+                // Someone walked away from the negotiation: return any unfinished items to their
+                // owners (accepted swaps stand) and close the tables so no one is left staring at a
+                // trader who has left. Whoever remains drops back to idle and can move on.
+                sq.trade.interruptAll();
+                sq.trade = null;
+                sq.resolution = null;
+                sq.vote = null;
+                sq.mustMove.clear();
+            }
             if (rosterAfter.size() <= 1) {
                 sq.clear();
             }

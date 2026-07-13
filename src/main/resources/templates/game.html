@@ -201,6 +201,21 @@
             </div>
           </div>
           <p class="hint">Every table is visible to every trader. An item can only be on one table at a time.</p>
+
+          <h2 style="margin-top:16px;">Part ways</h2>
+          <div class="moves">
+            <button class="up" th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='UP')}"
+                    th:disabled="${!s.canClimb or !s.readyToClimb}" hx-target="#screen" hx-swap="outerHTML"
+                    title="Up (climb — gear required)">⬆️<span>Up</span></button>
+            <button class="left" th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='LEFT')}"
+                    hx-target="#screen" hx-swap="outerHTML" title="Left">⬅️<span>Left</span></button>
+            <button class="down" th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='DOWN')}"
+                    th:disabled="${s.player.level == 0}" hx-target="#screen" hx-swap="outerHTML"
+                    title="Down">⬇️<span>Down</span></button>
+            <button class="right" th:attr="hx-post=@{/game/{id}/move(id=${s.player.id},direction='RIGHT')}"
+                    hx-target="#screen" hx-swap="outerHTML" title="Right">➡️<span>Right</span></button>
+          </div>
+          <p class="hint">Done here? Walk off in any direction — the tables close behind you.</p>
         </div>
 
         <!-- FIGHTING -->
