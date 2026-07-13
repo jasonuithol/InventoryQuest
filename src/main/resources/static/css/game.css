@@ -1,3 +1,14 @@
+/* Bundled color-emoji font (a subset of Noto Color Emoji covering every glyph the game uses),
+   so emoji render identically for everyone instead of depending on the OS's emoji font — which
+   often lacks the newer glyphs (🫁 🪄 🪵 …). Listed first in the stack: it only carries emoji,
+   so text falls through to the system fonts, and only emoji codepoints use it. */
+@font-face {
+    font-family: 'IQ Emoji';
+    src: url('/fonts/iq-emoji.woff2') format('woff2');
+    font-display: swap;
+    unicode-range: U+2194-27BF, U+2934-2935, U+2B05-2B07, U+FE0F, U+1F000-1FAFF, U+1F900-1F9FF;
+}
+
 :root {
     --cell: 56px;
     --gap: 4px;
@@ -14,7 +25,7 @@
 
 body {
     margin: 0;
-    font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+    font-family: 'IQ Emoji', system-ui, "Segoe UI", Roboto, sans-serif;
     background: #16181d;
     color: var(--ink);
 }

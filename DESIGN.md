@@ -396,6 +396,8 @@ can trigger a four-square merge, a vote, and a trade table without recruiting
 
 ## License & credits
 
-MIT. Emoji are rendered from the player's system font — no bundled art assets.
+MIT. The only art asset is a tiny subset of **Noto Color Emoji** (SIL OFL 1.1),
+bundled so every glyph the game uses renders identically across browsers instead
+of depending on the player's system emoji font.
 Inventory Tetris agony inspired by every game that ever made a sword take up
 four slots.
