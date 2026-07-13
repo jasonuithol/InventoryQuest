@@ -39,7 +39,22 @@ public record GameSnapshot(
     public record OfferView(String itemId, String emoji) {
     }
 
-    /** The current player's combat status. */
-    public record FightView(String hearts, int combatants) {
+    /**
+     * The current player's combat status: their health, whose turn it is, the opponents they can
+     * choose to attack, and any parley on the table.
+     */
+    public record FightView(
+            String hearts,
+            int combatants,
+            boolean myTurn,
+            String currentTurnName,      // whose turn it is (null during a parley / when over)
+            List<Opponent> opponents,    // living others — one attack button each
+            boolean parleyPending,
+            boolean iProposedParley,     // I called the parley and am waiting on answers
+            boolean iMustAnswer,         // a parley is on the table and I have to accept/reject
+            String parleyProposer        // who proposed the pending parley
+    ) {
+        public record Opponent(String id, String name, String hearts) {
+        }
     }
 }

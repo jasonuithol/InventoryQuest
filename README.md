@@ -94,7 +94,9 @@ end-to-end in the UI. Each ascent is gated on carrying that level's mountaineeri
 level, so the climb competes with loot for scarce backpack space.
 The multiplayer coordination — vote rounds with three-way routing (a single Fight vote resolves
 the round immediately and drags everyone in), complete-graph trading with the single-table
-invariant, and combat rounds where each weapon deals its own damage in hit-points and can miss —
-is implemented as tested domain state machines, wired through an in-memory per-square coordinator
-with WebSocket nudges, and reachable in the UI via the dev bot spawner. Health is tracked in
-hit-points (4 HP = 1 heart); food items (🍎🍞🍖) are eaten to restore it.
+invariant, and **turn-based combat** where fighters act in turn (one action each: attack a chosen
+opponent — weapon damage in hit-points, subject to a miss — or call for parley, which ends the
+fight only if every opponent accepts) — is implemented as tested domain state machines, wired
+through an in-memory per-square coordinator with WebSocket nudges, and reachable in the UI via the
+dev bot spawner. Health is tracked in hit-points (4 HP = 1 heart); food items (🍎🍞🍖) are eaten to
+restore it.

@@ -162,14 +162,47 @@
         </div>
 
         <!-- FIGHTING -->
-        <div th:if="${s.state.name() == 'FIGHTING'}">
+        <div th:if="${s.state.name() == 'FIGHTING'}" th:with="f=${s.fight}">
           <h2>⚔️ Fighting</h2>
-          <p>Your health:
-            <span class="hearts" th:if="${s.fight != null}" th:text="${s.fight.hearts}">❤️</span></p>
-          <p class="muted" th:if="${s.fight != null}" th:text="${s.fight.combatants} + ' combatants remain'">…</p>
-          <button class="danger" th:attr="hx-post=@{/game/{id}/fight/step(id=${s.player.id})}"
-                  hx-target="#screen" hx-swap="outerHTML">Next round</button>
-          <p class="hint">Each round every combatant takes a hit. Last one standing wins the square.</p>
+          <p>Your health: <span class="hearts" th:if="${f != null}" th:text="${f.hearts}">❤️</span></p>
+          <p class="muted" th:if="${f != null}" th:text="${f.combatants} + ' combatants remain'">…</p>
+
+          <div th:if="${f != null}">
+            <!-- A parley I have to answer -->
+            <div th:if="${f.iMustAnswer}">
+              <p><b><span th:text="${f.parleyProposer}">Foe</span></b> calls for a parley — end the
+                fight peacefully?</p>
+              <button class="ok" th:attr="hx-post=@{/game/{id}/fight/parley/accept(id=${s.player.id})}"
+                      hx-target="#screen" hx-swap="outerHTML">🕊️ Accept parley</button>
+              <button class="danger" th:attr="hx-post=@{/game/{id}/fight/parley/reject(id=${s.player.id})}"
+                      hx-target="#screen" hx-swap="outerHTML">⚔️ Reject — fight on</button>
+            </div>
+
+            <!-- I proposed a parley and am waiting on the others -->
+            <p class="muted" th:if="${f.iProposedParley}">🕊️ Parley proposed — waiting for the others
+              to accept or reject…</p>
+
+            <!-- My turn: pick who to attack, or call for parley -->
+            <div th:if="${f.myTurn}">
+              <p><b>Your turn</b> — attack one opponent, or call for parley.</p>
+              <div class="fighters">
+                <button class="danger" th:each="o : ${f.opponents}"
+                        th:attr="hx-post=@{/game/{id}/fight/attack/{tid}(id=${s.player.id},tid=${o.id})}"
+                        hx-target="#screen" hx-swap="outerHTML">
+                  ⚔️ <span th:text="${o.name}">Foe</span>
+                  <span class="hearts" th:text="${o.hearts}">❤️</span>
+                </button>
+              </div>
+              <button style="margin-top:8px;" th:attr="hx-post=@{/game/{id}/fight/parley(id=${s.player.id})}"
+                      hx-target="#screen" hx-swap="outerHTML">🕊️ Call for parley</button>
+            </div>
+
+            <!-- Not my turn, no parley for me -->
+            <p class="muted" th:if="${!f.myTurn and !f.iMustAnswer and !f.iProposedParley}"
+               th:text="'Waiting for ' + ${f.currentTurnName} + ' to take their turn…'">Waiting…</p>
+          </div>
+          <p class="hint">Fighters take turns. Each attack is one turn. Anyone can call a parley —
+            it ends the fight only if <em>every</em> opponent accepts.</p>
         </div>
 
         <!-- SUMMIT / ELIMINATED -->

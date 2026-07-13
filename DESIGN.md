@@ -41,17 +41,44 @@ When a square holds multiple players, they hold a vote:
 
 - Anyone voting *Fight* visibly draws their weapon — no ambushes, just bad vibes.
 - If **anyone** votes Fight, **everyone** fights — including the ones who voted
-  Leave. The mountain respects commitment, not exit strategies.
+  Leave. The mountain respects commitment, not exit strategies. A single Fight
+  vote resolves the round **immediately** — the fight starts and drags in
+  everyone present, without waiting for the undecided to finish voting.
 - If no one votes Fight: a **trade table opens between every pair of Trade
   voters** — three traders means each player sees two tables, four traders
   means three — and Leave voters must immediately move — left, right, or up.
-- After each combat round, the square votes again (all three options). Fighting
-  ends when no one votes Fight, or when **1 or 0** players remain alive in the
-  square.
 - **Arrivals:** a player entering during a vote joins that vote. A player
   entering during a **trade interrupts it** — the table clears, items return to
   their owners, and everyone now present votes again. A player entering during a
-  **fight joins the ongoing fight**. Climb carefully.
+  **fight joins the ongoing fight** (and any parley on the table is called off).
+  Climb carefully.
+
+### Combat — turns and parley
+
+A fight is **turn-based**. Fighters act in turn order (the order they entered
+the fight); a newcomer takes the back of the line. On your turn you do exactly
+one thing, and it ends your turn — **no one can advance the fight on your
+behalf**:
+
+- **Attack one chosen opponent.** With three or more fighters you pick *which*
+  one — there's a separate attack button per opponent — because one attack is
+  one turn, so you can only strike a single rival at a time. A swing deals your
+  equipped weapon's damage in **hit-points** and **can miss** (every weapon has
+  a miss chance; a missed swing still costs you your turn). A 🗡️ dagger does
+  **less than a full heart**; a ⚔️ sword does more; bare hands do 1.
+- **Call for parley** instead of attacking. The parley is offered to every other
+  living fighter, who each **accept** or **reject**. If they *all* accept, the
+  fight ends without further blood and the survivors re-vote (talk, trade, or —
+  if someone insists — fight again). If **anyone rejects**, the parley collapses
+  and the fight resumes at the next fighter's turn (your turn was spent proposing).
+
+The fight is over once **at most one fighter is still standing** (last one wins
+the square) or a parley truce is struck.
+
+**Health** is tracked in **hit-points** — 4 HP to a heart, four hearts full.
+Damage subtracts hit-points; a fighter reaching zero is eliminated. Health is
+not automatically restored: you **eat** 🍎🍞🍖 food items (an action on the item)
+to heal, capped at full, consuming the food.
 
 ### Trading
 
@@ -81,16 +108,39 @@ placed items return to their owners and the square votes again.
 
 - Your **backpack** is a grid of slots.
 - Items are **emojis**, and occupy square footprints: 1×1, 2×2, 3×3, 4×4
-  (🗡️ might be 1×1; ⚔️ a 2×2; 🛡️ a 3×3 tower shield you will absolutely
-  regret picking up on level 0).
+  (🗡️ a dagger is 1×1; ⚔️ a sword a hefty 3×3; 🛡️ a 3×3 tower shield you will
+  absolutely regret picking up on level 0; 🧱 iron bar and 🪵 wood are 2×2).
 - Items on the ground can only be picked up **if they fit** in your backpack.
-- Items are either usable **artifacts** (sword, shield, ring, amulet) or
-  **crafting ingredients** (🧱 iron bar, 💎 jewel) that **combine** into
-  artifacts.
+- Items come in a few kinds:
+  - usable **artifacts** (sword, shield, ring, amulet);
+  - **crafting ingredients** (🧱 iron bar, 💎 jewel, 🪵 wood, 🧵 leather) that
+    **combine** into artifacts;
+  - **food** (🍎 apple, 🍞 bread, 🍖 meat) — eaten to restore hit-points;
+  - **mountaineering gear** (🧥 snow jacket, 🥾 cleats, ⛏️ ice pick, 🫁 oxygen
+    tank) — required to climb (see below).
 - Four **equipment slots** sit outside the backpack: sword, shield, ring, amulet.
 
-**Actions:** select item(s) · combine · equip · drop · move up/left/right ·
-(when others are present) vote **Fight / Trade / Leave**.
+**Actions:** select item(s) · combine · equip · drop · eat · move up/left/right ·
+(when others are present) vote **Fight / Trade / Leave**, and in a fight
+**attack an opponent** or **call for parley**.
+
+### Climbing gear — every level demands its own
+
+Each ascent is gated on **carrying that level's gear** in your backpack — not
+worn, *carried*, so it competes with loot and ingredients for space:
+
+| Climb from | Requires |
+|---|---|
+| Level 0 → 1 | 🧥 snow jacket (2×2) |
+| Level 1 → 2 | 🥾 cleats (1×1) |
+| Level 2 → 3 | ⛏️ ice pick (2×2) |
+| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) |
+
+The mountain seeds each level's gear onto that level's squares, so the climb is
+always *achievable* — but the 🫁 oxygen tank alone is nine cells of a thirty-cell
+pack. The mountain makes you choose between hoarding and ascending. You keep the
+gear as you climb; a full summit run means hauling all four pieces if you want to
+keep them.
 
 ---
 
@@ -114,8 +164,8 @@ do.
 │                          │            drawn weapons         │
 │  EQUIPMENT               │  TRADING   your N−1 tables,      │
 │  🗡️ sword   🛡️ shield    │            stacked               │
-│  💍 ring    📿 amulet    │  FIGHTING  combat actions +      │
-│                          │            next round's vote     │
+│  💍 ring    📿 amulet    │  FIGHTING  on your turn: attack  │
+│                          │            a foe / call parley   │
 │                          │  MUST MOVE ⬅️⬆️➡️ (Leave voters)  │
 │                          │  + recipes whenever items are    │
 │                          │    selected (see below)          │
@@ -188,7 +238,8 @@ com.example.inventoryquest/
                # ground items per square
   inventory/   # backpack grid, N×N placement/fit checking, pick up, drop, select
   crafting/    # recipes: ingredients → artifacts (combine action)
-  combat/      # fight/trade voting, weapon-drawn visibility, combat rounds, elimination
+  combat/      # fight/trade/leave voting; turn-based fight state machine: per-turn
+               # attack-a-chosen-foe (weapon damage in HP, can miss) or parley, elimination
   trade/       # trade table state machine: OPEN → PROPOSED → (ACCEPTED | REJECTED → OPEN)
   realtime/    # websocket sessions, square-scoped broadcast, htmx fragment push
 ```
@@ -212,10 +263,18 @@ Design notes:
   `OPEN`.
 - **Votes are per-square rounds with dynamic membership and three-way routing**:
   a vote is immutable once cast for that round; a player entering mid-round is
-  added to the roster and votes like anyone else. Resolution is a single
-  transactional operation — any Fight vote sends *everyone* to combat; otherwise
-  tables open between all Trade-voter pairs and Leave voters are put into a
-  must-move state (left/right/up) before they can act again.
+  added to the roster and votes like anyone else. Any Fight vote resolves the
+  round *immediately* and sends **everyone** to combat without waiting for the
+  undecided; a peaceful outcome waits until all have voted, then opens tables
+  between all Trade-voter pairs and puts Leave voters into a must-move state.
+- **The fight is a turn-based state machine** (`Fight`), tested as one: fighters
+  act in insertion order, one action per turn — **attack a chosen opponent**
+  (weapon damage in hit-points, subject to a miss roll) or **call for parley**.
+  A parley is offered to every other living fighter; unanimous acceptance ends
+  the fight peacefully (survivors re-vote), a single rejection resumes it at the
+  next turn. The fight ends at ≤1 standing or a truce. Turn ownership is enforced
+  server-side — an out-of-turn action is rejected, so no player can advance the
+  fight for anyone else. Arrivals join the fight and call off any pending parley.
 - **Placement is bin-fitting, not bin-packing**: the player chooses where an item
   goes; the server only validates the footprint is free. The suffering is the
   content.

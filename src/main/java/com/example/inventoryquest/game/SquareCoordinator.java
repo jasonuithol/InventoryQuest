@@ -1,6 +1,7 @@
 package com.example.inventoryquest.game;
 
 import com.example.inventoryquest.combat.CombatService;
+import com.example.inventoryquest.combat.Fight;
 import com.example.inventoryquest.combat.VoteOption;
 import com.example.inventoryquest.combat.VoteResolution;
 import com.example.inventoryquest.combat.VoteRound;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -26,22 +28,27 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class SquareCoordinator {
 
+    /** What a viewer needs to render the fight from their seat — all in raw ids, names resolved above. */
+    public record FightState(int myHp, int combatants, boolean myTurn, UUID currentTurn,
+                             List<UUID> opponents, Map<UUID, Integer> opponentHp,
+                             boolean parleyPending, boolean iProposedParley, boolean iMustAnswer,
+                             UUID parleyProposer) {
+    }
+
     /** Per-square coordination state. Guarded by {@code synchronized(this-square)}. */
     static final class Square {
         VoteRound vote;
         VoteResolution resolution;
         TradeSession trade;
-        Map<UUID, Integer> fightHealth;           // fighter -> remaining hit-points
-        Map<UUID, Integer> fightDamage;           // fighter -> weapon attack damage
+        Fight fight;
         final Set<UUID> mustMove = new LinkedHashSet<>();
 
         boolean fighting() {
-            return fightHealth != null;
+            return fight != null;
         }
 
         void endFight() {
-            fightHealth = null;
-            fightDamage = null;
+            fight = null;
         }
 
         void clear() {
@@ -79,9 +86,9 @@ public class SquareCoordinator {
                 sq.mustMove.clear();
             }
             if (sq.fighting()) {
-                // arrival during a fight joins the ongoing fight
-                sq.fightHealth.put(arriving, healthByPlayer.getOrDefault(arriving, 1));
-                sq.fightDamage.put(arriving, damageByPlayer.getOrDefault(arriving, CombatService.UNARMED_DAMAGE));
+                // arrival during a fight joins the ongoing fight (and calls off any parley)
+                sq.fight.join(arriving, healthByPlayer.getOrDefault(arriving, 1),
+                        damageByPlayer.getOrDefault(arriving, CombatService.UNARMED_DAMAGE));
             } else if (rosterAfter.size() <= 1) {
                 sq.clear(); // back to solo
             } else if (sq.vote == null || sq.resolution != null) {
@@ -100,10 +107,9 @@ public class SquareCoordinator {
         synchronized (sq) {
             sq.mustMove.remove(leaving);
             if (sq.fighting()) {
-                sq.fightHealth.remove(leaving);
-                sq.fightDamage.remove(leaving);
-                if (combatService.isOver(sq.fightHealth)) {
-                    sq.endFight();
+                sq.fight.leave(leaving);
+                if (sq.fight.isOver()) {
+                    concludeFight(sq);
                 }
             }
             if (rosterAfter.size() <= 1) {
@@ -134,12 +140,13 @@ public class SquareCoordinator {
                                  Map<UUID, Integer> healthByPlayer, Map<UUID, Integer> damageByPlayer) {
         sq.resolution = res;
         if (res.isFight()) {
-            sq.fightHealth = new LinkedHashMap<>();
-            sq.fightDamage = new LinkedHashMap<>();
+            Map<UUID, Integer> health = new LinkedHashMap<>();
+            Map<UUID, Integer> damage = new LinkedHashMap<>();
             res.fighters().forEach(f -> {
-                sq.fightHealth.put(f, healthByPlayer.getOrDefault(f, 1));
-                sq.fightDamage.put(f, damageByPlayer.getOrDefault(f, CombatService.UNARMED_DAMAGE));
+                health.put(f, healthByPlayer.getOrDefault(f, 1));
+                damage.put(f, damageByPlayer.getOrDefault(f, CombatService.UNARMED_DAMAGE));
             });
+            sq.fight = combatService.begin(health, damage);
         } else {
             sq.mustMove.clear();
             sq.mustMove.addAll(res.mustMove());
@@ -147,11 +154,71 @@ public class SquareCoordinator {
         }
     }
 
+    // ── Combat actions ─────────────────────────────────────────────────────────────────
+
+    /** The current fighter attacks a chosen opponent. Returns anyone eliminated by the swing. */
+    public Set<UUID> attack(int level, int index, UUID attacker, UUID target) {
+        Square sq = square(level, index);
+        Set<UUID> eliminated;
+        synchronized (sq) {
+            if (!sq.fighting()) {
+                return Set.of();
+            }
+            Fight.AttackOutcome out = sq.fight.attack(attacker, target);
+            eliminated = out.eliminated() ? Set.of(out.target()) : Set.of();
+            if (sq.fight.isOver()) {
+                concludeFight(sq);
+            }
+        }
+        broadcaster.broadcastSquare(level, index);
+        return eliminated;
+    }
+
+    /** The current fighter offers a parley to every other combatant. */
+    public void callParley(int level, int index, UUID proposer) {
+        Square sq = square(level, index);
+        synchronized (sq) {
+            if (sq.fighting()) {
+                sq.fight.callParley(proposer);
+            }
+        }
+        broadcaster.broadcastSquare(level, index);
+    }
+
+    /** An opponent accepts or rejects the pending parley. */
+    public void answerParley(int level, int index, UUID responder, boolean accept) {
+        Square sq = square(level, index);
+        synchronized (sq) {
+            if (!sq.fighting()) {
+                return;
+            }
+            sq.fight.answerParley(responder, accept);
+            if (sq.fight.isOver()) {
+                concludeFight(sq);
+            }
+        }
+        broadcaster.broadcastSquare(level, index);
+    }
+
+    /**
+     * End a finished fight. A parley truce with survivors still together reopens the vote (they can
+     * now trade, leave, or — if someone insists — fight again); otherwise the encounter is over.
+     */
+    private void concludeFight(Square sq) {
+        boolean peace = sq.fight.endedPeacefully();
+        Set<UUID> survivors = sq.fight.combatants();
+        sq.endFight();
+        sq.resolution = null;
+        sq.vote = peace && survivors.size() > 1 ? new VoteRound(survivors) : null;
+    }
+
+    // ── Reads ──────────────────────────────────────────────────────────────────────────
+
     /** Derive the player-facing state for {@code player} given how many players share the square. */
     public GameState stateFor(int level, int index, UUID player, int rosterSize) {
         Square sq = square(level, index);
         synchronized (sq) {
-            if (sq.fighting() && sq.fightHealth.containsKey(player)) {
+            if (sq.fighting() && sq.fight.combatants().contains(player)) {
                 return GameState.FIGHTING;
             }
             if (sq.resolution != null && !sq.resolution.isFight()) {
@@ -181,28 +248,32 @@ public class SquareCoordinator {
         return Optional.ofNullable(square(level, index).trade);
     }
 
-    public Map<UUID, Integer> fight(int level, int index) {
-        Map<UUID, Integer> fight = square(level, index).fightHealth;
-        return fight == null ? Map.of() : Map.copyOf(fight);
-    }
-
-    /** Advance one combat round; returns eliminated players. */
-    public Set<UUID> stepFight(int level, int index) {
+    /** Living fighters' current hit-points, for persisting the fight's outcome. */
+    public Map<UUID, Integer> fightHealth(int level, int index) {
         Square sq = square(level, index);
         synchronized (sq) {
-            if (!sq.fighting()) {
-                return Set.of();
+            return sq.fighting() ? sq.fight.health() : Map.of();
+        }
+    }
+
+    /** Everything {@code viewer} needs to render the fight, or empty if they are not in it. */
+    public Optional<FightState> fightState(int level, int index, UUID viewer) {
+        Square sq = square(level, index);
+        synchronized (sq) {
+            if (!sq.fighting() || !sq.fight.combatants().contains(viewer)) {
+                return Optional.empty();
             }
-            CombatService.RoundResult result = combatService.round(sq.fightHealth, sq.fightDamage);
-            sq.fightHealth = new LinkedHashMap<>(result.healthAfter());
-            sq.fightDamage.keySet().retainAll(sq.fightHealth.keySet()); // drop eliminated fighters
-            if (combatService.isOver(sq.fightHealth)) {
-                sq.endFight();
-                sq.resolution = null;
-                sq.vote = null;
-            }
-            broadcaster.broadcastSquare(level, index);
-            return result.eliminated();
+            Fight f = sq.fight;
+            List<UUID> opponents = f.combatants().stream().filter(id -> !id.equals(viewer)).toList();
+            Map<UUID, Integer> opponentHp = new LinkedHashMap<>();
+            opponents.forEach(id -> opponentHp.put(id, f.healthOf(id)));
+            boolean pending = f.parleyPending();
+            UUID proposer = f.parleyProposer();
+            boolean iProposed = pending && viewer.equals(proposer);
+            boolean iMustAnswer = f.awaitingAnswerFrom(viewer);
+            boolean myTurn = viewer.equals(f.currentTurn());
+            return Optional.of(new FightState(f.healthOf(viewer), f.combatants().size(), myTurn,
+                    f.currentTurn(), opponents, opponentHp, pending, iProposed, iMustAnswer, proposer));
         }
     }
 }

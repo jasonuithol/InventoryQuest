@@ -1,5 +1,6 @@
 package com.example.inventoryquest.web;
 
+import com.example.inventoryquest.combat.CombatException;
 import com.example.inventoryquest.combat.VoteOption;
 import com.example.inventoryquest.crafting.CraftingException;
 import com.example.inventoryquest.game.GameException;
@@ -109,9 +110,24 @@ public class GameController {
         return act(id, model, () -> game.castVote(id, option));
     }
 
-    @PostMapping("/game/{id}/fight/step")
-    public String stepFight(@PathVariable UUID id, Model model) {
-        return act(id, model, () -> game.stepFight(id));
+    @PostMapping("/game/{id}/fight/attack/{targetId}")
+    public String attack(@PathVariable UUID id, @PathVariable UUID targetId, Model model) {
+        return act(id, model, () -> game.attack(id, targetId));
+    }
+
+    @PostMapping("/game/{id}/fight/parley")
+    public String parley(@PathVariable UUID id, Model model) {
+        return act(id, model, () -> game.parley(id));
+    }
+
+    @PostMapping("/game/{id}/fight/parley/accept")
+    public String acceptParley(@PathVariable UUID id, Model model) {
+        return act(id, model, () -> game.answerParley(id, true));
+    }
+
+    @PostMapping("/game/{id}/fight/parley/reject")
+    public String rejectParley(@PathVariable UUID id, Model model) {
+        return act(id, model, () -> game.answerParley(id, false));
     }
 
     @PostMapping("/game/{id}/trade/{tableId}/offer/{instanceId}")
@@ -146,7 +162,7 @@ public class GameController {
         String message = null;
         try {
             action.run();
-        } catch (InventoryException | CraftingException | GameException e) {
+        } catch (InventoryException | CraftingException | GameException | CombatException e) {
             message = e.getMessage();
         }
         model.addAttribute("s", game.snapshot(id, Set.of(), message));

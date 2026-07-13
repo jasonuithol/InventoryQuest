@@ -241,13 +241,34 @@ public class GameService {
                 healthByPlayer(pos), attackDamageByPlayer(pos));
     }
 
+    /** On your turn, swing at one chosen opponent. One attack is one turn. */
     @Transactional
-    public void stepFight(UUID playerId) {
+    public void attack(UUID playerId, UUID targetId) {
         Player player = players.require(playerId);
         Position pos = player.position();
-        Set<UUID> eliminated = coordinator.stepFight(pos.level(), pos.index());
-        // Persist the round's outcome onto the players.
-        Map<UUID, Integer> health = coordinator.fight(pos.level(), pos.index());
+        Set<UUID> eliminated = coordinator.attack(pos.level(), pos.index(), playerId, targetId);
+        persistFightOutcome(pos, eliminated);
+    }
+
+    /** On your turn, call for parley instead of attacking; every opponent must then answer. */
+    @Transactional
+    public void parley(UUID playerId) {
+        Player player = players.require(playerId);
+        Position pos = player.position();
+        coordinator.callParley(pos.level(), pos.index(), playerId);
+    }
+
+    /** Accept or reject a parley you have been offered. One rejection keeps the fight going. */
+    @Transactional
+    public void answerParley(UUID playerId, boolean accept) {
+        Player player = players.require(playerId);
+        Position pos = player.position();
+        coordinator.answerParley(pos.level(), pos.index(), playerId, accept);
+    }
+
+    /** Persist the health left by a combat action, and eliminate anyone the swing dropped to zero. */
+    private void persistFightOutcome(Position pos, Set<UUID> eliminated) {
+        Map<UUID, Integer> health = coordinator.fightHealth(pos.level(), pos.index());
         health.forEach((id, hp) -> {
             Player p = players.require(id);
             p.setHealth(hp);
@@ -429,9 +450,22 @@ public class GameService {
             return null;
         }
         Position pos = player.position();
-        Map<UUID, Integer> fight = coordinator.fight(pos.level(), pos.index());
-        int myHp = fight.getOrDefault(player.getId(), player.getHealth());
-        return new GameSnapshot.FightView(Hearts.render(myHp), fight.size());
+        return coordinator.fightState(pos.level(), pos.index(), player.getId())
+                .map(fs -> toFightView(pos, fs))
+                .orElse(null);
+    }
+
+    private GameSnapshot.FightView toFightView(Position pos, SquareCoordinator.FightState fs) {
+        Map<UUID, String> names = players.inSquare(pos.level(), pos.index()).stream()
+                .collect(Collectors.toMap(Player::getId, Player::getName, (a, b) -> a));
+        List<GameSnapshot.FightView.Opponent> opponents = fs.opponents().stream()
+                .map(id -> new GameSnapshot.FightView.Opponent(id.toString(),
+                        names.getOrDefault(id, "?"), Hearts.render(fs.opponentHp().getOrDefault(id, 0))))
+                .toList();
+        String currentTurnName = fs.currentTurn() == null ? null : names.getOrDefault(fs.currentTurn(), "?");
+        String proposer = fs.parleyProposer() == null ? null : names.getOrDefault(fs.parleyProposer(), "?");
+        return new GameSnapshot.FightView(Hearts.render(fs.myHp()), fs.combatants(), fs.myTurn(),
+                currentTurnName, opponents, fs.parleyPending(), fs.iProposedParley(), fs.iMustAnswer(), proposer);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
