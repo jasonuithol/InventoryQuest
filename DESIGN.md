@@ -145,8 +145,12 @@ placed items return to their owners and the square votes again.
   - usable **artifacts** — a ⚔️ sword/🗡️ dagger for attack damage, and worn gear
     with combat perks: 💍 ring (+1 attack vs other players), 📿 amulet (+1 attack
     vs monsters), 🛡️ shield (−1 damage on every hit taken, from players or monsters);
-  - **crafting ingredients** (🧱 iron bar, 💎 jewel, 🪵 wood, 🧵 leather) that
+  - **crafting ingredients** (🧱 iron bar, 💎 jewel, 🪵 wood, 🧵 leather, plus the
+    🔩 bolt, 🪛 screwdriver, and ⚙️ metal scrap that build a toolbox) that
     **combine** into artifacts;
+  - the 🧰 **toolbox** (a 2×2, itself crafted from 🔩 + 🪛 + ⚙️) — the price of
+    admission for every serious build: the ⚔️ sword, 💍 ring, 🥾 cleats,
+    ⛏️ ice pick, and 🫁 oxygen tank all need one on the bench;
   - **food** (🍎 apple, 🍞 bread, 🍖 meat) — eaten to restore hit-points;
   - **mountaineering gear** (🧥 snow jacket, 🥾 cleats, ⛏️ ice pick, 🫁 oxygen
     tank) — required to climb (see below);
@@ -167,9 +171,9 @@ it costs space you may want for loot:
 | Climb from | Requires | Crafted from (monster drop + a raw material) |
 |---|---|---|
 | Level 0 → 1 | 🧥 snow jacket (2×2) | 🧶 yeti pelt + 🧵 leather |
-| Level 1 → 2 | 🥾 cleats (1×1) | 🦷 wolf teeth + 🧵 leather |
-| Level 2 → 3 | ⛏️ ice pick (2×2) | 🪄 wizard's staff + 🪵 wood |
-| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) | 🥽 alien suit + 🧱 iron bar |
+| Level 1 → 2 | 🥾 cleats (1×1) | 🧰 toolbox + 🦷 wolf teeth + 🧵 leather |
+| Level 2 → 3 | ⛏️ ice pick (2×2) | 🧰 toolbox + 🪄 wizard's staff + 🪵 wood |
+| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) | 🧰 toolbox + 🥽 alien suit + 🧱 iron bar |
 
 The gear is **not lying around** — it must be **crafted** from the level's monster
 drop plus a raw material (the drop alone won't do). In fact **nothing craftable is

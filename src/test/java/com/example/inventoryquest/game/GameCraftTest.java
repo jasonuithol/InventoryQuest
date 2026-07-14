@@ -60,7 +60,8 @@ class GameCraftTest {
         Backpack bag = Backpack.empty(5, 6)
                 .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
                 .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow();
+                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow()
+                .place(PlacedItem.of(ItemType.TOOLBOX, 2, 0)).orElseThrow();
         Player smith = playerWith(bag);
         when(players.require(smith.getId())).thenReturn(smith);
 
@@ -73,11 +74,13 @@ class GameCraftTest {
 
     @Test
     void whenItWontFitTheArtifactIsDroppedOnTheGround() {
-        // A 2-row backpack full of bricks: a 3x3 sword can never fit, even once they're consumed.
-        Backpack bag = Backpack.empty(2, 6)
+        // A 2-row backpack packed with the ingredients: a 3x3 sword needs 3 rows, so it can never
+        // fit here even once the bricks and toolbox are consumed.
+        Backpack bag = Backpack.empty(2, 8)
                 .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
                 .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow();
+                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow()
+                .place(PlacedItem.of(ItemType.TOOLBOX, 0, 6)).orElseThrow();
         Player smith = playerWith(bag);
         when(players.require(smith.getId())).thenReturn(smith);
 

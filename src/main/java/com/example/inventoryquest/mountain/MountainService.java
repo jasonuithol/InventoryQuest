@@ -27,6 +27,7 @@ public class MountainService {
     private static final ItemType[] SPAWN_TABLE = {
             ItemType.IRON_BAR, ItemType.IRON_BAR, ItemType.WOOD,
             ItemType.JEWEL, ItemType.LEATHER,
+            ItemType.BOLT, ItemType.SCREWDRIVER, ItemType.METAL_SCRAP,
             ItemType.APPLE, ItemType.BREAD, ItemType.MEAT
     };
 

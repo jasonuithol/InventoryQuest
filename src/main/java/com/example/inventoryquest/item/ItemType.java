@@ -14,6 +14,12 @@ public enum ItemType {
     WOOD("🪵", 2, ItemKind.INGREDIENT, null, 0, 0),        // the log — a bulky 2×2
     LEATHER("🧵", 1, ItemKind.INGREDIENT, null, 0, 0),
 
+    // ── Toolbox components: found separately, crafted into the 🧰 that every real build needs ──
+    BOLT("🔩", 1, ItemKind.INGREDIENT, null, 0, 0),
+    SCREWDRIVER("🪛", 1, ItemKind.INGREDIENT, null, 0, 0),
+    METAL_SCRAP("⚙️", 1, ItemKind.INGREDIENT, null, 0, 0),
+    TOOLBOX("🧰", 2, ItemKind.INGREDIENT, null, 0, 0),     // crafted, then a required 2×2 ingredient
+
     // ── Food (eat to restore health; heal is in hit-points, 4 HP = 1 heart) ────────
     APPLE("🍎", 1, ItemKind.FOOD, null, 0, 4),
     BREAD("🍞", 1, ItemKind.FOOD, null, 0, 6),

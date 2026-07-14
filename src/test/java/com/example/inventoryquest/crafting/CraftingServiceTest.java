@@ -23,14 +23,16 @@ class CraftingServiceTest {
 
     @Test
     void threeIronBricksBecomeOneSword() {
-        // Three 2x2 bricks fill the top two rows; the 3x3 sword lands in the space below.
+        // Three 2x2 bricks fill the top two rows, the 2x2 toolbox sits below; the 3x3 sword lands
+        // in the space that clears once they're all consumed.
         Backpack bag = Backpack.empty(5, 6)
                 .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
                 .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow();
-        Set<UUID> iron = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
+                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow()
+                .place(PlacedItem.of(ItemType.TOOLBOX, 2, 0)).orElseThrow();
+        Set<UUID> ingredients = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
 
-        Backpack after = service.craft(bag, swordRecipe(), iron, 2, 0);
+        Backpack after = service.craft(bag, swordRecipe(), ingredients, 2, 0);
 
         assertThat(after.items()).singleElement()
                 .satisfies(i -> assertThat(i.type()).isEqualTo(ItemType.SWORD));
@@ -54,10 +56,11 @@ class CraftingServiceTest {
         Backpack bag = Backpack.empty(5, 6)
                 .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
                 .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow();
-        Set<UUID> iron = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
+                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow()
+                .place(PlacedItem.of(ItemType.TOOLBOX, 2, 0)).orElseThrow();
+        Set<UUID> ingredients = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
 
-        Backpack after = service.consume(bag, swordRecipe(), iron);
+        Backpack after = service.consume(bag, swordRecipe(), ingredients);
 
         assertThat(after.items()).isEmpty(); // ingredients spent, no sword placed
     }
