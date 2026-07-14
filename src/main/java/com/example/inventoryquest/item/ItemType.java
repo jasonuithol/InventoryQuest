@@ -17,7 +17,7 @@ public enum ItemType {
     // ── Toolbox components: found separately, crafted into the 🧰 that every real build needs ──
     BOLT("🔩", 1, ItemKind.INGREDIENT, null, 0, 0),
     SCREWDRIVER("🪛", 1, ItemKind.INGREDIENT, null, 0, 0),
-    METAL_SCRAP("⚙️", 1, ItemKind.INGREDIENT, null, 0, 0),
+    METAL_SCRAP("⚙️", 3, ItemKind.INGREDIENT, null, 0, 0), // a bulky 3×3 tangle
     TOOLBOX("🧰", 2, ItemKind.INGREDIENT, null, 0, 0),     // crafted, then a required 2×2 ingredient
 
     // ── Food (eat to restore health; heal is in hit-points, 4 HP = 1 heart) ────────
