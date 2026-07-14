@@ -9,12 +9,12 @@ package com.example.inventoryquest.item;
 public enum ItemType {
 
     // ── Crafting ingredients ──────────────────────────────────────────────────────
-    IRON_BAR("🧱", 2, ItemKind.INGREDIENT, null, 0, 0),   // the brick — a bulky 2×2
     JEWEL("💎", 1, ItemKind.INGREDIENT, null, 0, 0),
     WOOD("🪵", 2, ItemKind.INGREDIENT, null, 0, 0),        // the log — a bulky 2×2
     LEATHER("🧵", 1, ItemKind.INGREDIENT, null, 0, 0),
 
-    // ── Toolbox components: found separately, crafted into the 🧰 that every real build needs ──
+    // ── Toolbox components: found separately, crafted into the 🧰 that every real build needs.
+    // Metal scrap doubles as the primary metal for weapons and gear — a bulky 3×3 to haul. ──
     BOLT("🔩", 1, ItemKind.INGREDIENT, null, 0, 0),
     SCREWDRIVER("🪛", 1, ItemKind.INGREDIENT, null, 0, 0),
     METAL_SCRAP("⚙️", 3, ItemKind.INGREDIENT, null, 0, 0), // a bulky 3×3 tangle

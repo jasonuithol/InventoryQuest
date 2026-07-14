@@ -22,17 +22,16 @@ class CraftingServiceTest {
     }
 
     @Test
-    void threeIronBricksBecomeOneSword() {
-        // Three 2x2 bricks fill the top two rows, the 2x2 toolbox sits below; the 3x3 sword lands
+    void twoScrapsAndAToolboxBecomeOneSword() {
+        // Two 3x3 scraps fill the top band, the 2x2 toolbox sits below; the 3x3 sword lands
         // in the space that clears once they're all consumed.
         Backpack bag = Backpack.empty(5, 6)
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow()
-                .place(PlacedItem.of(ItemType.TOOLBOX, 2, 0)).orElseThrow();
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 0)).orElseThrow()
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 3)).orElseThrow()
+                .place(PlacedItem.of(ItemType.TOOLBOX, 3, 0)).orElseThrow();
         Set<UUID> ingredients = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
 
-        Backpack after = service.craft(bag, swordRecipe(), ingredients, 2, 0);
+        Backpack after = service.craft(bag, swordRecipe(), ingredients, 0, 0);
 
         assertThat(after.items()).singleElement()
                 .satisfies(i -> assertThat(i.type()).isEqualTo(ItemType.SWORD));
@@ -41,11 +40,10 @@ class CraftingServiceTest {
     @Test
     void selectionMustMatchTheRecipeMultiset() {
         Backpack bag = Backpack.empty(5, 6)
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow();
-        Set<UUID> onlyTwo = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 0)).orElseThrow();
+        Set<UUID> onlyOne = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
 
-        assertThatThrownBy(() -> service.craft(bag, swordRecipe(), onlyTwo, 2, 0))
+        assertThatThrownBy(() -> service.craft(bag, swordRecipe(), onlyOne, 0, 0))
                 .isInstanceOf(CraftingException.class)
                 .hasMessageContaining("don't match");
     }
@@ -54,10 +52,9 @@ class CraftingServiceTest {
     void consumeRemovesIngredientsWithoutPlacingAResult() {
         // The half of crafting that always happens — used when the result must go to the ground.
         Backpack bag = Backpack.empty(5, 6)
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow()
-                .place(PlacedItem.of(ItemType.TOOLBOX, 2, 0)).orElseThrow();
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 0)).orElseThrow()
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 3)).orElseThrow()
+                .place(PlacedItem.of(ItemType.TOOLBOX, 3, 0)).orElseThrow();
         Set<UUID> ingredients = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
 
         Backpack after = service.consume(bag, swordRecipe(), ingredients);
@@ -68,7 +65,7 @@ class CraftingServiceTest {
     @Test
     void consumeStillValidatesTheSelectionMatchesTheRecipe() {
         Backpack bag = Backpack.empty(5, 6)
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow();
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 0)).orElseThrow();
         Set<UUID> onlyOne = bag.items().stream().map(PlacedItem::id).collect(Collectors.toSet());
         assertThatThrownBy(() -> service.consume(bag, swordRecipe(), onlyOne))
                 .isInstanceOf(CraftingException.class);
@@ -77,13 +74,13 @@ class CraftingServiceTest {
     @Test
     void availableIngredientsCountsOnlyIngredients() {
         Backpack bag = Backpack.empty(5, 6)
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.JEWEL, 0, 4)).orElseThrow()
-                .place(PlacedItem.of(ItemType.DAGGER, 0, 5)).orElseThrow(); // artifact, not counted
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 0)).orElseThrow()
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 3)).orElseThrow()
+                .place(PlacedItem.of(ItemType.JEWEL, 3, 0)).orElseThrow()
+                .place(PlacedItem.of(ItemType.DAGGER, 3, 1)).orElseThrow(); // artifact, not counted
 
         assertThat(service.availableIngredients(bag))
-                .containsEntry(ItemType.IRON_BAR, 2)
+                .containsEntry(ItemType.METAL_SCRAP, 2)
                 .containsEntry(ItemType.JEWEL, 1)
                 .doesNotContainKey(ItemType.DAGGER);
     }

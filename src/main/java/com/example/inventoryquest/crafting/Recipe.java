@@ -24,7 +24,7 @@ public record Recipe(ItemType result, Map<ItemType, Integer> ingredientCounts) {
         ingredientCounts = Map.copyOf(ingredientCounts);
     }
 
-    /** Convenience factory from a flat ingredient list, e.g. {@code of(SWORD, IRON_BAR, IRON_BAR, IRON_BAR)}. */
+    /** Convenience factory from a flat ingredient list, e.g. {@code of(SWORD, TOOLBOX, METAL_SCRAP, METAL_SCRAP)}. */
     public static Recipe of(ItemType result, ItemType... ingredients) {
         Map<ItemType, Integer> counts = new EnumMap<>(ItemType.class);
         for (ItemType ingredient : ingredients) {
@@ -62,7 +62,7 @@ public record Recipe(ItemType result, Map<ItemType, Integer> ingredientCounts) {
         return missingFrom(available).isEmpty();
     }
 
-    /** Flattened list of ingredient instances required, e.g. [IRON_BAR, IRON_BAR, IRON_BAR]. */
+    /** Flattened list of ingredient instances required, e.g. [METAL_SCRAP, METAL_SCRAP, WOOD]. */
     public List<ItemType> ingredientList() {
         return ingredientCounts.entrySet().stream()
                 .flatMap(e -> java.util.Collections.nCopies(e.getValue(), e.getKey()).stream())

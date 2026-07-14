@@ -70,11 +70,11 @@ class GameEatTest {
 
     @Test
     void nonFoodCannotBeEaten() {
-        PlacedItem iron = PlacedItem.of(ItemType.IRON_BAR, 0, 0);
-        Player eater = playerWith(5, iron);
+        PlacedItem jewel = PlacedItem.of(ItemType.JEWEL, 0, 0);
+        Player eater = playerWith(5, jewel);
         when(players.require(eater.getId())).thenReturn(eater);
 
-        assertThatThrownBy(() -> game.eat(eater.getId(), iron.id()))
+        assertThatThrownBy(() -> game.eat(eater.getId(), jewel.id()))
                 .isInstanceOf(InventoryException.class)
                 .hasMessageContaining("isn't something you can eat");
         assertThat(eater.getBackpack().items()).hasSize(1); // not consumed

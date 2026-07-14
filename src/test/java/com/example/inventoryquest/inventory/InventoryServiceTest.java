@@ -34,9 +34,9 @@ class InventoryServiceTest {
 
     @Test
     void cannotEquipAnIngredient() {
-        PlacedItem iron = PlacedItem.of(ItemType.IRON_BAR, 0, 0);
-        bag = bag.place(iron).orElseThrow();
-        assertThatThrownBy(() -> service.equip(bag, new EnumMap<>(EquipSlot.class), iron.id()))
+        PlacedItem jewel = PlacedItem.of(ItemType.JEWEL, 0, 0);
+        bag = bag.place(jewel).orElseThrow();
+        assertThatThrownBy(() -> service.equip(bag, new EnumMap<>(EquipSlot.class), jewel.id()))
                 .isInstanceOf(InventoryException.class)
                 .hasMessageContaining("cannot be equipped");
     }

@@ -57,11 +57,12 @@ class GameCraftTest {
 
     @Test
     void whenThereIsRoomTheArtifactGoesIntoTheBackpack() {
+        // Two 3x3 scraps fill the top band, the 2x2 toolbox sits below; the 3x3 sword fits once
+        // they're consumed.
         Backpack bag = Backpack.empty(5, 6)
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow()
-                .place(PlacedItem.of(ItemType.TOOLBOX, 2, 0)).orElseThrow();
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 0)).orElseThrow()
+                .place(PlacedItem.of(ItemType.METAL_SCRAP, 0, 3)).orElseThrow()
+                .place(PlacedItem.of(ItemType.TOOLBOX, 3, 0)).orElseThrow();
         Player smith = playerWith(bag);
         when(players.require(smith.getId())).thenReturn(smith);
 
@@ -74,21 +75,19 @@ class GameCraftTest {
 
     @Test
     void whenItWontFitTheArtifactIsDroppedOnTheGround() {
-        // A 2-row backpack packed with the ingredients: a 3x3 sword needs 3 rows, so it can never
-        // fit here even once the bricks and toolbox are consumed.
-        Backpack bag = Backpack.empty(2, 8)
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 0)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 2)).orElseThrow()
-                .place(PlacedItem.of(ItemType.IRON_BAR, 0, 4)).orElseThrow()
-                .place(PlacedItem.of(ItemType.TOOLBOX, 0, 6)).orElseThrow();
+        // A 1-row backpack holds the two 1x1 ingredients, but a 2x2 snow jacket needs 2 rows, so
+        // it can never fit here even once they're consumed.
+        Backpack bag = Backpack.empty(1, 6)
+                .place(PlacedItem.of(ItemType.YETI_PELT, 0, 0)).orElseThrow()
+                .place(PlacedItem.of(ItemType.LEATHER, 0, 1)).orElseThrow();
         Player smith = playerWith(bag);
         when(players.require(smith.getId())).thenReturn(smith);
 
-        game.craft(smith.getId(), ItemType.SWORD);
+        game.craft(smith.getId(), ItemType.SNOW_JACKET);
 
         // Ingredients spent, nothing placed in the backpack...
         assertThat(smith.getBackpack().items()).isEmpty();
-        // ...and the sword is now lying in the square.
-        verify(mountain).scatter(new Position(0, 0), ItemType.SWORD);
+        // ...and the jacket is now lying in the square.
+        verify(mountain).scatter(new Position(0, 0), ItemType.SNOW_JACKET);
     }
 }

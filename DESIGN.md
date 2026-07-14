@@ -139,15 +139,16 @@ placed items return to their owners and the square votes again.
 - Your **backpack** is a grid of slots.
 - Items are **emojis**, and occupy square footprints: 1×1, 2×2, 3×3, 4×4
   (🗡️ a dagger is 1×1; ⚔️ a sword a hefty 3×3; 🛡️ a 3×3 tower shield you will
-  absolutely regret picking up on level 0; 🧱 iron bar and 🪵 wood are 2×2).
+  absolutely regret picking up on level 0; ⚙️ metal scrap is a bulky 3×3, 🪵 wood 2×2).
 - Items on the ground can only be picked up **if they fit** in your backpack.
 - Items come in a few kinds:
   - usable **artifacts** — a ⚔️ sword/🗡️ dagger for attack damage, and worn gear
     with combat perks: 💍 ring (+1 attack vs other players), 📿 amulet (+1 attack
     vs monsters), 🛡️ shield (−1 damage on every hit taken, from players or monsters);
-  - **crafting ingredients** (🧱 iron bar, 💎 jewel, 🪵 wood, 🧵 leather, plus the
-    🔩 bolt, 🪛 screwdriver, and ⚙️ metal scrap that build a toolbox) that
-    **combine** into artifacts;
+  - **crafting ingredients** (💎 jewel, 🪵 wood, 🧵 leather, plus the 🔩 bolt,
+    🪛 screwdriver, and ⚙️ metal scrap that build a toolbox) that **combine** into
+    artifacts; ⚙️ metal scrap doubles as the primary metal for weapons and gear
+    (a bulky 3×3 — only two fit in the pack at once);
   - the 🧰 **toolbox** (a 2×2, itself crafted from 🔩 + 🪛 + ⚙️) — the price of
     admission for every serious build: the ⚔️ sword, 💍 ring, 🥾 cleats,
     ⛏️ ice pick, and 🫁 oxygen tank all need one on the bench;
@@ -173,7 +174,7 @@ it costs space you may want for loot:
 | Level 0 → 1 | 🧥 snow jacket (2×2) | 🧶 yeti pelt + 🧵 leather |
 | Level 1 → 2 | 🥾 cleats (1×1) | 🧰 toolbox + 🦷 wolf teeth + 🧵 leather |
 | Level 2 → 3 | ⛏️ ice pick (2×2) | 🧰 toolbox + 🪄 wizard's staff + 🪵 wood |
-| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) | 🧰 toolbox + 🥽 alien suit + 🧱 iron bar |
+| Level 3 → 4 (summit) | 🫁 oxygen tank (3×3) | 🧰 toolbox + 🥽 alien suit + ⚙️ metal scrap |
 
 The gear is **not lying around** — it must be **crafted** from the level's monster
 drop plus a raw material (the drop alone won't do). In fact **nothing craftable is
@@ -218,7 +219,7 @@ do.
 ├──────────────────────────┬──────────────────────────────────┤
 │  🎒 BACKPACK             │  CONTEXT PANEL                   │
 │  ┌──┬──┬──┬──┬──┬──┐     │                                  │
-│  │🧱│  │💎│  │  │  │     │  (contents depend on the state   │
+│  │⚙️│  │💎│  │  │  │     │  (contents depend on the state   │
 │  ├──┼──┼──┼──┼──┼──┤     │   badge in the strip above:)     │
 │  │  │ 🛡️2×2 │  │  │     │                                  │
 │  ├──┼──┴──┴──┼──┼──┤     │  IDLE      move ⬅️⬆️➡️ · ground  │
@@ -251,8 +252,8 @@ do.
 Recipes list themselves as you select ingredients — the recipe panel is a live
 filter over your selection:
 
-1. Select 🧱 iron in the backpack → the panel lists **every recipe containing
-   iron**.
+1. Select ⚙️ metal scrap in the backpack → the panel lists **every recipe
+   containing scrap**.
 2. Also select leather → the list narrows to recipes containing **both**
    (AND-filter over ingredient sets).
 3. Recipes you can't complete from your backpack stay visible but **dimmed,

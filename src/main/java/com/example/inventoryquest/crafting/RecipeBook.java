@@ -18,12 +18,14 @@ public class RecipeBook {
             // every serious build below.
             Recipe.of(ItemType.TOOLBOX, ItemType.BOLT, ItemType.SCREWDRIVER, ItemType.METAL_SCRAP),
 
-            Recipe.of(ItemType.DAGGER, ItemType.IRON_BAR, ItemType.WOOD),
-            Recipe.of(ItemType.SWORD, ItemType.TOOLBOX, ItemType.IRON_BAR, ItemType.IRON_BAR, ItemType.IRON_BAR),
+            Recipe.of(ItemType.DAGGER, ItemType.METAL_SCRAP, ItemType.WOOD),
+            // Scrap is a bulky 3×3 and only two fit in the pack at once, so metal-heavy builds cap
+            // at two scraps and lean on smaller hardware to make up the bulk.
+            Recipe.of(ItemType.SWORD, ItemType.TOOLBOX, ItemType.METAL_SCRAP, ItemType.METAL_SCRAP),
             Recipe.of(ItemType.TOWER_SHIELD,
-                    ItemType.IRON_BAR, ItemType.IRON_BAR, ItemType.IRON_BAR, ItemType.IRON_BAR,
-                    ItemType.WOOD, ItemType.WOOD),
-            Recipe.of(ItemType.RING, ItemType.TOOLBOX, ItemType.JEWEL, ItemType.IRON_BAR),
+                    ItemType.METAL_SCRAP, ItemType.METAL_SCRAP,
+                    ItemType.BOLT, ItemType.BOLT, ItemType.WOOD),
+            Recipe.of(ItemType.RING, ItemType.TOOLBOX, ItemType.JEWEL, ItemType.METAL_SCRAP),
             Recipe.of(ItemType.AMULET, ItemType.JEWEL, ItemType.JEWEL, ItemType.LEATHER),
 
             // Gateway gear — each ascent's kit, crafted from that level's monster drop plus a
@@ -32,7 +34,7 @@ public class RecipeBook {
             Recipe.of(ItemType.SNOW_JACKET, ItemType.YETI_PELT, ItemType.LEATHER),
             Recipe.of(ItemType.CLEATS, ItemType.TOOLBOX, ItemType.WOLF_TEETH, ItemType.LEATHER),
             Recipe.of(ItemType.ICE_PICK, ItemType.TOOLBOX, ItemType.WIZARD_STAFF, ItemType.WOOD),
-            Recipe.of(ItemType.OXYGEN_TANK, ItemType.TOOLBOX, ItemType.ALIEN_SUIT, ItemType.IRON_BAR)
+            Recipe.of(ItemType.OXYGEN_TANK, ItemType.TOOLBOX, ItemType.ALIEN_SUIT, ItemType.METAL_SCRAP)
     );
 
     public List<Recipe> all() {

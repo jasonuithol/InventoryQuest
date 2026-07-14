@@ -25,9 +25,9 @@ public class MountainService {
      * {@code spawnTableHasNothingCraftable} test enforces the rule.)
      */
     private static final ItemType[] SPAWN_TABLE = {
-            ItemType.IRON_BAR, ItemType.IRON_BAR, ItemType.WOOD,
+            ItemType.METAL_SCRAP, ItemType.METAL_SCRAP, ItemType.METAL_SCRAP, ItemType.WOOD,
             ItemType.JEWEL, ItemType.LEATHER,
-            ItemType.BOLT, ItemType.SCREWDRIVER, ItemType.METAL_SCRAP,
+            ItemType.BOLT, ItemType.SCREWDRIVER,
             ItemType.APPLE, ItemType.BREAD, ItemType.MEAT
     };
 

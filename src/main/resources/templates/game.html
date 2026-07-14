@@ -133,7 +133,7 @@
             <p class="muted" th:if="${s.ground.isEmpty()}">Nothing here.</p>
             <div class="ground">
               <div class="g" th:each="g : ${s.ground}">
-                <span class="emoji" th:text="${g.emoji}">🧱</span>
+                <span class="emoji" th:text="${g.emoji}">⚙️</span>
                 <button class="deco" th:disabled="${!g.fits}"
                         th:title="${g.fits} ? 'pick up' : 'no room in your backpack'"
                         th:attr="hx-post=@{/game/{id}/pickup/{iid}(id=${s.player.id},iid=${g.id})}"
@@ -180,14 +180,14 @@
                   <span th:each="o : ${t.mine}" th:unless="${t.state == 'OPEN'}" th:text="${o.emoji}">💎</span>
                 </div>
                 <div class="side"><h4>They offer</h4>
-                  <span th:each="o : ${t.theirs}" th:text="${o.emoji}">🧱</span>
+                  <span th:each="o : ${t.theirs}" th:text="${o.emoji}">⚙️</span>
                 </div>
               </div>
               <div th:if="${t.state == 'OPEN'}">
                 <span class="muted">offer:</span>
                 <button th:each="item : ${s.player.backpack.items}"
                         th:attr="hx-post=@{/game/{id}/trade/{tid}/offer/{iid}(id=${s.player.id},tid=${t.tableId},iid=${item.id})}"
-                        hx-target="#screen" hx-swap="outerHTML" th:text="${item.type.emoji}">🧱</button>
+                        hx-target="#screen" hx-swap="outerHTML" th:text="${item.type.emoji}">⚙️</button>
                 <button class="primary" style="margin-top:6px;"
                         th:attr="hx-post=@{/game/{id}/trade/{tid}/propose(id=${s.player.id},tid=${t.tableId})}"
                         hx-target="#screen" hx-swap="outerHTML">Propose</button>
@@ -286,7 +286,7 @@
             <span class="arrow">⟵</span>
             <span th:each="ing : ${r.ingredients}" class="ing" th:classappend="${!ing.satisfied} ? 'missing'"
                   th:title="${ing.found} ? null : 'an ingredient you haven\'t found yet'">
-              <span th:text="${ing.found ? ing.emoji : '❓'}">🧱</span><span class="muted" th:text="'×' + ${ing.need}">×3</span>
+              <span th:text="${ing.found ? ing.emoji : '❓'}">⚙️</span><span class="muted" th:text="'×' + ${ing.need}">×3</span>
             </span>
             <button class="primary" style="margin-left:auto;" th:if="${r.craftable}"
                     th:attr="hx-post=@{/game/{id}/craft/{res}(id=${s.player.id},res=${r.resultName})}"
